@@ -342,6 +342,8 @@
                 delay: 618,
                 // 过滤框的提示文字
                 placeholder: '输入后按回车过滤',
+                // 过滤时是否区分大小写，默认为 false
+                matchCase: FALSE,
                 // 附加的样式类名称
                 css: NULL,
                 // 过滤框的样式
@@ -395,7 +397,7 @@
             visible: 5,
             // 下拉项的渲染器，使用返回值设置项的内容
             // render: function(itemdata, index, alldata){}  this 指向即将渲染的网页元素对象。
-            // itemdata:这一项的数据 
+            // itemdata:这一项的数据
             // index: 这一项数据的索引
             // alldata:下拉的所有数据
             // 设置为false 禁用渲染器
@@ -845,7 +847,9 @@
                 // 过滤器函数的返回值决定了这一项是否会被命中（true）
                 if(isfn ? keyOrFn.call(this, data) :
                     // 传的是字符串，直接看项的显示文字里面有没有这个字符串
-                    item.text().indexOf(keyOrFn.toString()) !== -1) {
+                    (ts.option.header.filter.matchCase ?
+                        item.text().indexOf(keyOrFn.toString()) !== -1 :
+                        item.text().toLowerCase().indexOf(keyOrFn.toString().toLowerCase()) !== -1)) {
                     result.push({
                         item: item,
                         data: data
@@ -1633,6 +1637,16 @@
         var mode = option.mode;
         var domheight = dom.height();
         var winheight = $(win).height();
+        var contextHeight = context.height();
+        var contextWidth = context.width();
+
+        // 如果 context 的 box-sizing 属性是 border-box
+        // 那么context的实际高度需要把上下内边距加上
+        // 宽度也一样处理
+        if(/^border-box$/i.test(context.css('box-sizing'))) {
+            contextHeight += parseInt(context.css('padding-top')) + parseInt(context.css('padding-bottom'));
+            contextWidth += parseInt(context.css('padding-left')) + parseInt(context.css('padding-right'));
+        }
 
         if(mode === mode_dropdown) {
             // 下拉组件默认会出现在context的下方
@@ -1641,12 +1655,12 @@
             // 要是上方也没有足够的空间呢？  那就与我无关了
             // 这里的 +2  -2  是防止下拉组件与context的边框重叠
             // 重叠的话可能context就会被挡住一点，特别是边框，看起来会很怪
-            if(winheight - pos.top - context.height() < domheight) {
+            if(winheight - pos.top - contextHeight < domheight) {
                 // 放到上方
                 pos.top = pos.top - domheight - 2;
             } else {
                 // 放在下方
-                pos.top = pos.top + context.height() + 2;
+                pos.top = pos.top + contextHeight + 2;
             }
 
             // 设置下拉组件的显示位置
@@ -1655,7 +1669,7 @@
                 top: pos.top,
                 // 如果选项中设置了组件的宽度，就用设置的宽度
                 // 如果没有设置，就让下拉组件与context宽度相同
-                width: option.style.width || context.width()
+                width: option.style.width || contextWidth
             });
         } else if(mode === mode_popup) {
             // 弹出模式时，水平居中，垂直方向上，top为剩下空间的1/3

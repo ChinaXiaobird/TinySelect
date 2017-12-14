@@ -149,6 +149,8 @@ var ts = tinyselect('#tinyselectcontext', {
             delay: 618,
             // 过滤框的提示文字
             placeholder: '输入后按回车过滤',
+            // 过滤时是否区分大小写，默认为 false
+            matchCase: false,
             // 附加的样式类名称
             css: NULL,
             // 过滤框的样式
