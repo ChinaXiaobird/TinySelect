@@ -97,6 +97,11 @@
     var setTimeout = win.setTimeout;
 
     /**
+     * 保存一个parseInt 函数
+     */
+    var parseInt = win.parseInt;
+
+    /**
      * 给值true一个别名
      */
     var TRUE = !0;
@@ -479,11 +484,11 @@
             // 这个是在执行完其初始化，添加到容器前调用的
             render: FALSE,
             /**
-             * 下拉项数量
+             * 下拉项总数量
              */
             totalTpl: '共{0}项'.fill(str_placeholder),
             /**
-             * 选中的下拉项数据
+             * 选中的下拉项数量
              */
             selectedTpl: '选中{0}项/'.fill(str_placeholder),
             // 附加的样式类名称
@@ -613,10 +618,10 @@
      */
     function TinySelect(selector, option, multi) {
         // 取第一个DOM对象
-        var context = $(selector).get(0);
+        var source = $(selector).get(0);
 
         // 取不到DOM对象，就放弃，不创建下拉组件了
-        if (!context) {
+        if (!source) {
             return;
         }
 
@@ -627,12 +632,12 @@
         for (var i = 0; i < instanceSet.length; i++) {
             instance = instanceSet[i];
             // 找到了通过这个context创建的下拉组件，返回这个下拉组件
-            if (instance.context.get(0) === context) {
+            if (instance.context.get(0) === source) {
                 return instance;
             }
         }
         // 创建下拉组件
-        instance = new TinySelect.fn.init(context, option, multi);
+        instance = new TinySelect.fn.init(source, option, multi);
 
         // 将创建的下拉组件放到实例集合中，以方便实例的查找
         // 查找：前面通过遍历这个集合，查找context对应的实例部分
@@ -651,12 +656,12 @@
         /**
          * 初始化函数，用来创建创建下拉实例
          *
-         * @param {HtmlElement} context 下拉的上下文DOM元素，下拉将在这个元素的上方或下方显示
+         * @param {HtmlElement} source 下拉的源DOM元素，下拉将在这个元素的上方或下方显示
          * @param  {Object|Array} option 选项或数据
          * @param {Boolean} multi 是否可以多选，true为可多选，false为仅单选(默认);仅当option为数组时此参数有效
          * @return {TinySelect} 新的实例
          */
-        init: function (context, option, multi) {
+        init: function (source, option, multi) {
             // 保存实例对象到变量里面
             var ts = this;
 
@@ -688,8 +693,17 @@
                 }
             }
 
+            // 源元素
+            // 假设源不是select元素
+            // 那么上下文元素就是这个元素了
+            ts.source = source = $(source);
+
             // DOM上下文
-            ts.context = $(context);
+            ts.context = source.is('select') ?
+                // 如果是通过select元素创建的，那么就创建一个元素来占位
+                InitFromSelect(ts, source) :
+                // 否则直接使用源元素来作为上下文
+                source;
 
             // 渲染上下文DOM元素
             renderContext(ts);
@@ -1022,6 +1036,91 @@
     TinySelect.defaults = defaultOption;
 
     /**
+     * 根据传入的select元素初始化
+     * @param {TinySelect} ts TinySelect实例
+     * @param {jQuery} select 下拉框的jQuery对象
+     * @return {jQuery} 创建的 context
+     */
+    function InitFromSelect(ts, select) {
+        var context = $('<div>');
+
+        // 实例的配置项
+        var option = ts.option;
+
+        // select的dom对象
+        var selectDom = select.get(0);
+
+        // 将实例标识为从select创建
+        ts.fromSelect = TRUE;
+
+        var height = select.height();
+        // 将select的样式应用到 context 上
+
+        $.each(['padding', 'margin',
+            'box-sizing', 'color',
+            'background', 'background-color',
+            'font', 'border', 'lineHeight',
+            'top', 'right', 'bottom', 'left'
+        ], function (i, item) {
+            context.css(item, select.css(item));
+        });
+
+        var position = getElementStyleValue(select, 'position');
+        var padding = getElementPadding(select);
+
+        context.css({
+            // 如果select用的是默认的static布局，那么就把context设置为relative
+            position: /^static$/.test(position) ? 'relative' : position,
+            width: select.width(),
+            height: height,
+            // 计算一下来得到行高
+            // 即：
+            // select 的高度送去上下padding
+            lineHeight: (height - padding.top - padding.bottom) + 'px'
+        });
+
+        // 设置单选多选模式
+        // 此时，通过配置传入的multi项将被覆盖
+        option.result.multi = selectDom.hasAttribute('multiple');
+
+        // 初始化数据
+        // 通过配置传入的数据也将无效
+        var items = [];
+        var selected = [];
+        select.find('option').each(function () {
+            var item = $(this);
+            var val = item.val();
+            items.push({
+                id: val,
+                text: item.text()
+            });
+            // 记录选中项
+            if (item.is(':selected')) {
+                selected.push(val);
+            }
+        });
+
+        option.item.data = items;
+
+        // 设置默认的选中值
+        // 通过配置传入的数据也将无效
+        if (selected.length) {
+            option.item.value = selected;
+        }
+
+        // 只读或禁用属性
+        if (selectDom.hasAttribute('readonly') || select.is(':disabled')) {
+            option.readonly = TRUE;
+        }
+
+        // 隐藏掉select元素
+        select.hide();
+        // 将context放到外原来的select后面
+        select.after(context);
+        return context;
+    }
+
+    /**
      * 渲染上下文DOM元素里面的DOM，创建结果容器和下拉指示元素
      */
     function renderContext(ts) {
@@ -1052,7 +1151,7 @@
 
         // 如果context是静态布局，那么修改为相对布局
         // 因为单选时要显示那个下拉指示器，这个指示器是用的绝对定位
-        if (/static/i.test(context.css('position'))) {
+        if (/static/i.test(getElementStyleValue(context, 'position'))) {
             context.css('position', 'relative');
         }
     }
@@ -1080,7 +1179,7 @@
                 option.style.width = context.siblings().length ? context.width() :
                     'auto';
                 option.style.height = context.height() || 'auto';
-                var position = context.css('position');
+                var position = getElementStyleValue(context, 'position');
                 option.style.position = /static/i.test(position) ? 'relative' : position;
 
                 context.append(container);
@@ -1470,10 +1569,12 @@
             // 如果没有设置，我就自作聪明，给计算一下
             // 我想让box的高度=第一个下拉项的高度*visibleCount
 
+            calcSizeBegin(ts);
+
             // 根据第一项来计算容器的理论高度： 行高+上下padding
-            var itemHeight = parseInt(item.css('lineHeight')) +
-                parseInt(item.css('paddingTop')) +
-                parseInt(item.css('paddingBottom'));
+            var itemHeight = getElementSize(item).height;
+
+            calcSizeEnd(ts);
 
             // 数据项的数量大于可见项数量时，设置容器高度为可见项数量的高度+分组高度（如果有分组）
             var groupHeight = 0;
@@ -1698,16 +1799,9 @@
         var mode = option.mode;
         var domheight = dom.height();
         var winheight = $(win).height();
-        var contextHeight = context.height();
-        var contextWidth = context.width();
-
-        // 如果 context 的 box-sizing 属性是 border-box
-        // 那么context的实际高度需要把上下内边距加上
-        // 宽度也一样处理
-        if (/^border-box$/i.test(context.css('box-sizing'))) {
-            contextHeight += parseInt(context.css('padding-top')) + parseInt(context.css('padding-bottom'));
-            contextWidth += parseInt(context.css('padding-left')) + parseInt(context.css('padding-right'));
-        }
+        var contextSize = getElementSize(context);
+        var contextHeight = contextSize.height;
+        var contextWidth = contextSize.width;
 
         if (mode === mode_dropdown) {
             // 下拉组件默认会出现在context的下方
@@ -1809,7 +1903,7 @@
      */
     function bindItemClickEvent(ts) {
         // 给下拉组件的下拉项容器添加事件的委托 .tinyselect-box
-        // 委托容器监听下拉项的点击事件  .tinyselect-item 
+        // 委托容器监听下拉项的点击事件  .tinyselect-item
         ts.box.on('click', Selector.build(css_item).done(), function () {
             var item = $(this);
 
@@ -1847,9 +1941,9 @@
 
         var render = resultOption.render;
 
-        // 绑定一下下拉组件的项选中事件 
+        // 绑定一下下拉组件的项选中事件
         ts.on(evt_select, function (e) {
-            // 根据配置  option.item.textField 属性取出数据项的显示文本  
+            // 根据配置  option.item.textField 属性取出数据项的显示文本
             var text = e.data[option.item.textField];
 
             // 如果有定义选中结果的渲染器，那么调用渲染器
@@ -1888,7 +1982,7 @@
             return;
         }
 
-        // 绑定取消选中事件 
+        // 绑定取消选中事件
         ts.on(evt_unselect, function (e) {
             // 点击项后，如果需要取消选中这一项，那么就把已经选中的结果从结果容器中移除
             // 移除的依据是元素的 data-tiny-index 属性
@@ -1985,11 +2079,11 @@
      */
     function scrollToItem(item) {
         var box = item.parent();
-        if (!/auto/i.test(box.css('overflowY'))) {
+        if (!/auto/i.test(getElementStyleValue(box, 'overflowY'))) {
             box = box.parent();
         }
 
-        // 设置滚动条的位置 
+        // 设置滚动条的位置
         box.stop().animate({
             scrollTop: item.offset().top - box.offset().top + box.scrollTop()
         }, 100);
@@ -2026,7 +2120,7 @@
                     return;
                 }
 
-                // 取消选中这一项，并触发取消选中的事件 
+                // 取消选中这一项，并触发取消选中的事件
                 deselectItem(ts, getItemsFromDom(ts, Selector.build().attr(str_indexAttr, index).first()), TRUE);
 
                 return FALSE;
@@ -2385,6 +2479,69 @@
             // 有可见项，显示这个分组头
             group.show();
         }
+    }
+
+    /**
+     * 获取元素的大小(包含元素的padding在内)
+     * @param {jQuery} element
+     * @returns {{width, height}}
+     */
+    function getElementSize(element) {
+        var width = element.width();
+        var height = element.height();
+
+        var padding = getElementPadding(element);
+
+        if (/^border-box$/i.test(getElementStyleValue(element, 'box-sizing'))) {
+            height += padding.top + padding.bottom;
+            width += padding.left + padding.right;
+        }
+
+        return {
+            width: width,
+            height: height
+        };
+    }
+
+    /**
+     * 获取元素的样式值
+     * @param {jQuery} element 要获取样式的元素的jQuery对象
+     * @param {string} style 样式名称
+     * @return {string} 样式值
+     */
+    function getElementStyleValue(element, style) {
+        return element.css(style);
+    }
+
+    function getElementPadding(element) {
+        return {
+            top: parseInt(getElementStyleValue(element, 'padding-top')) || 0,
+            right: parseInt(getElementStyleValue(element, 'padding-right')) || 0,
+            bottom: parseInt(getElementStyleValue(element, 'padding-bottom')) || 0,
+            left: parseInt(getElementStyleValue(element, 'padding-left')) || 0
+        };
+    }
+
+    /**
+     * 计算大小前设置container的visibility样式，使其具体尺寸
+     * @param ts
+     */
+    function calcSizeBegin(ts) {
+        ts.dom.css({
+            display: 'block',
+            visibility: 'hidden'
+        });
+    }
+
+    /**
+     * 计算大小后取消container的visibility样式，以便其它操作正常进行
+     * @param ts
+     */
+    function calcSizeEnd(ts) {
+        ts.dom.css({
+            display: 'none',
+            visibility: 'visible'
+        });
     }
 
     /**
