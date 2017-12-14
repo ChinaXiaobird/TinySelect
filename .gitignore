@@ -8,3 +8,4 @@
 /tool/nginx-1.11.9/temp/uwsgi_temp
 /tool/nginx-1.11.9/temp/client_body_temp
 /.idea
+/nginx-1.11.9/logs

@@ -116,7 +116,7 @@ var ts = tinyselect('#tinyselectcontext', {
     // 组件是否是只读的
     readonly: false,
     // 显示模式，可以设置的值为： dropdown(默认下拉模式), list(列表模式), popup(弹出模式)
-    mode: mode_dropdown,
+    mode: 'dropdown',
     // 是否支持键盘操作，默认为 true
     keyboard: true,
     // 附加的样式类名称
