@@ -1,14 +1,19 @@
-$(function() {
-	var _hmt = _hmt || [];
-	(function() {
-	  var hm = document.createElement("script");
-	  hm.src = "https://hm.baidu.com/hm.js?3b889148d3a97c2e11263168434b1788";
-	  var s = document.getElementsByTagName("script")[0]; 
-	  s.parentNode.insertBefore(hm, s);
-	})();
+$(function () {
+    var _hmt = _hmt || [];
+    (function () {
+        var host = window.location.hostname;
+        if (/^127\.0\.0\.1$/.test(host) ||
+            /^localhost$/i.test(host)) {
+            return;
+        }
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?3b889148d3a97c2e11263168434b1788";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
     function autoIndent(html) {
         var indent;
-        return $.map(html.split('\n'), function(line) {
+        return $.map(html.split('\n'), function (line) {
             if (/^\s*$/.test(line)) {
                 return line;
             }
@@ -40,7 +45,7 @@ $(function() {
         return;
     }
 
-    $.get(less.attr('src')).then(function(lesstext) {
+    $.get(less.attr('src')).then(function (lesstext) {
         var styleheader = $('<div class="sourceheader">').text('Less 样式');
         var styleblock = $('<div>');
 

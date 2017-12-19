@@ -499,8 +499,15 @@
         result: {
             // 是否启用多选模式
             multi: FALSE,
+            // 是否显示下拉指示器
+            // false    始终不显示
+            // true     始终显示
+            // null     单选时显示  多选时不显示
+            arrow: NULL,
             // 渲染选中结果的渲染器，可以通过这个来改变选中结果的渲染
             render: FALSE,
+            // 当从select创建实例时，是否需要将TinySelect的选中值同步到select上，默认为 true
+            sync: TRUE,
             // 多选结果展示方式，可以设置为 0（显示选中的数量，默认值） 或者 1（显示 选中的项列表）
             // 这是一个预留配置项
             type: 0,
@@ -632,10 +639,11 @@
         for (var i = 0; i < instanceSet.length; i++) {
             instance = instanceSet[i];
             // 找到了通过这个context创建的下拉组件，返回这个下拉组件
-            if (instance.context.get(0) === source) {
+            if (instance.source.get(0) === source) {
                 return instance;
             }
         }
+
         // 创建下拉组件
         instance = new TinySelect.fn.init(source, option, multi);
 
@@ -949,7 +957,7 @@
         /**
          * 设置或获取下拉的选中值
          *
-         * @param {any} val 配置的item.valueField字段的值，可以是单个值(单选)或数组(多选)。不传时获取值
+         * @param {any} [val] 配置的item.valueField字段的值，可以是单个值(单选)或数组(多选)。不传时获取值
          * @param {Boolean} [trigger=false] 是否引发事件，默认为 false
          * @return {*} 返回值或实例
          */
@@ -1046,59 +1054,84 @@
 
         // 实例的配置项
         var option = ts.option;
+        // context 的配置项
+        var resultOption=option.result;
 
         // select的dom对象
         var selectDom = select.get(0);
 
         // 将实例标识为从select创建
-        ts.fromSelect = TRUE;
+        Object.defineProperty(ts, 'fromSelect', {
+            writabke: FALSE,
+            configurable: FALSE,
+            value: TRUE
+        });
 
-        var height = select.height();
+        // 在没有设置实例context的 css 或  style 时，
         // 将select的样式应用到 context 上
+        if (!resultOption || (!resultOption.style && !resultOption.css)) {
+            var height = select.height();
 
-        $.each(['padding', 'margin',
-            'box-sizing', 'color',
-            'background', 'background-color',
-            'font', 'border', 'lineHeight',
-            'top', 'right', 'bottom', 'left'
-        ], function (i, item) {
-            context.css(item, select.css(item));
-        });
+            $.each(['padding', 'margin',
+                'box-sizing', 'color',
+                'background', 'background-color',
+                'font', 'border', 'lineHeight',
+                'top', 'right', 'bottom', 'left'
+            ], function (i, item) {
+                context.css(item, select.css(item));
+            });
 
-        var position = getElementStyleValue(select, 'position');
-        var padding = getElementPadding(select);
+            var position = getElementStyleValue(select, 'position');
+            var padding = getElementPadding(select);
 
-        context.css({
-            // 如果select用的是默认的static布局，那么就把context设置为relative
-            position: /^static$/.test(position) ? 'relative' : position,
-            width: select.width(),
-            height: height,
-            // 计算一下来得到行高
-            // 即：
-            // select 的高度送去上下padding
-            lineHeight: (height - padding.top - padding.bottom) + 'px'
-        });
+            context.css({
+                // 如果select用的是默认的static布局，那么就把context设置为relative
+                position: /^static$/.test(position) ? 'relative' : position,
+                width: select.width(),
+                height: height,
+                // 计算一下来得到行高
+                // 即：
+                // select 的高度送去上下padding
+                lineHeight: (height - padding.top - padding.bottom) + 'px'
+            });
+        }
 
         // 设置单选多选模式
         // 此时，通过配置传入的multi项将被覆盖
-        option.result.multi = selectDom.hasAttribute('multiple');
+        resultOption.multi = selectDom.hasAttribute('multiple');
 
         // 初始化数据
         // 通过配置传入的数据也将无效
         var items = [];
         var selected = [];
+        var groupField = 'group';
+        var hasGroup = FALSE;
         select.find('option').each(function () {
             var item = $(this);
+            var parentNode = item.parent();
+
             var val = item.val();
-            items.push({
+            var data = {
                 id: val,
                 text: item.text()
-            });
+            };
+            if (parentNode.is('optgroup')) {
+                hasGroup = TRUE;
+                // 在分组内
+                data[groupField] = parentNode.attr('label');
+            }
+
+            items.push(data);
+
             // 记录选中项
             if (item.is(':selected')) {
                 selected.push(val);
             }
         });
+
+        if (hasGroup) {
+            option.group.valueField = groupField;
+        }
 
         option.item.data = items;
 
@@ -1130,18 +1163,29 @@
         }
 
         var context = ts.context;
+        var option = ts.option.result;
 
         // 添加存放选中结果的容器
         context.addClass(css_context)
             .append(createElement(css_contextResult));
+
+        if (option.css) {
+            context.addClass(option.css);
+        }
+
+        if (option.style) {
+            context.css(option.style);
+        }
 
         // 初始化时如果设置了只读属性，那么给上下文元素添加只读的样式类
         if (ts.option.readonly) {
             context.addClass(css_readonly);
         }
 
-        // 多选的话就不添加下拉指示器
-        if (ts.option.result.multi) {
+        // 设置为 false
+        // 或设置为 null 并且多选的话就不添加下拉指示器
+        var showArrow = option.arrow;
+        if (showArrow === FALSE || (showArrow === NULL && option.multi)) {
             return;
         }
 
@@ -1548,12 +1592,6 @@
         // 您不用担心了
         var item = renderSpecifiedItems(ts, box, itemoption, data, callback, 0, visibleCount);
 
-        // 如果可见项的数量大于等于数据项的数量，那么就让box的高度自己高兴吧
-        // 当前  visibleCount为0也是这样
-        if (visibleCount === 0 || visibleCount >= length) {
-            return;
-        }
-
         // 如果设置了container高度，就直接box高度了
         if (!isNaN(parseInt(ts.dom.get(0).style.height))) {
             var boxHeight = ts.dom.height();
@@ -1570,17 +1608,23 @@
             // 我想让box的高度=第一个下拉项的高度*visibleCount
 
             calcSizeBegin(ts);
-
             // 根据第一项来计算容器的理论高度： 行高+上下padding
             var itemHeight = getElementSize(item).height;
-
             calcSizeEnd(ts);
 
             // 数据项的数量大于可见项数量时，设置容器高度为可见项数量的高度+分组高度（如果有分组）
             var groupHeight = 0;
             // 有分组
             if (group.valueField) {
-                groupHeight = box.find(Selector.build(css_group).first()).height();
+                var groups = box.find(Selector.build(css_group));
+                groupHeight = groups.first().height() * groups.length;
+            }
+
+            // 如果可见项的数量大于等于数据项的数量，那么就让box的高度自己高兴吧
+            // 当前  visibleCount为0也是这样
+            if (visibleCount === 0 || visibleCount >= length) {
+                box.height(length * itemHeight + groupHeight);
+                return;
             }
 
             box.height(visibleCount * itemHeight + groupHeight);
@@ -1707,7 +1751,7 @@
 
         // 根据配置设置默认的选中项
         if (itemoption.value) {
-            ts.value(itemoption.value, true);
+            ts.value(itemoption.value, TRUE);
         }
 
         // 调用下拉项渲染完成的回调函数
@@ -1909,6 +1953,14 @@
 
             // 下拉项被点击了，切换这个项的选中状态
             setItemValue(ts, item, TRUE, TRUE);
+
+            // 如果是从select创建的实例，
+            // 并且设置了同步选中项，
+            // 那么就把select的选中项给搞一下
+            if(ts.fromSelect &&
+            ts.option.result.sync){
+                ts.source.val(ts.value());
+            }
 
             // 如果是单选，就隐藏下拉组件，如果是多选，就啥也不做，即保持下拉组件的打开状态
             if (ts.option.result.multi) {
@@ -2188,9 +2240,9 @@
         }
 
         // 多选  返回所有选中项的值组成的数组
-        return getItemsFromDom(ts, Selector.build(css_selected).done()).map(function (index, item) {
+        return $.makeArray(getItemsFromDom(ts, Selector.build(css_selected).done()).map(function (index, item) {
             return getData($(item))[valueField];
-        });
+        }));
     }
 
     /**

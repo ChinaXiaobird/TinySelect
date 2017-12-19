@@ -1,6 +1,6 @@
 {
     "name": "tinyselect",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "灵活的WEB下拉组件",
     "keywords": [
         "select",
@@ -9,14 +9,14 @@
         "tinyselect",
         "list"
     ],
-    "homepage": "http://git.oschina.net/hyjiacan/TinySelect",
+    "homepage": "http://gitee.com/hyjiacan/TinySelect",
     "example": "http://hyjiacan.oschina.io/tinyselect",
     "bugs": {
-        "url": "http://git.oschina.net/hyjiacan/TinySelect/issues"
+        "url": "http://gitee.com/hyjiacan/TinySelect/issues"
     },
     "repository": {
         "type": "git",
-        "url": "https://git.oschina.net/hyjiacan/TinySelect.git"
+        "url": "https://gitee.com/hyjiacan/TinySelect.git"
     },
     "license": "MIT",
     "author": "hyjiacan <dev@hyjiacan.com> (http://www.hyjiacan.com)",

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0"/>
+    <script src="../lib/jquery-1.10.2.min.js"></script>
+    <script src="../src/tinyselect.js"></script>
+    <link rel="stylesheet" type="text/css" href="../dist/tinyselect.css"/>
+    <link rel="stylesheet" type="text/css" href="misc/css/example.css"/>
+    <link rel="stylesheet" type="text/css" href="../lib/codemirror/codemirror.css"/>
+    <script src="../lib/codemirror/codemirror.js"></script>
+    <script src="../lib/codemirror/mode/javascript/javascript.js"></script>
+    <script src="../lib/codemirror/mode/css/css.js"></script>
+    <script src="misc/js/source.js"></script>
+</head>
+
+<body>
+<div class="tinyselectcontext-container">
+    <select id="tinyselectcontext" style="width:300px;">
+        <option value="1">一月</option>
+        <option value="2">二月</option>
+        <option value="3">三月</option>
+        <option value="4">四月</option>
+        <option value="5">五月</option>
+        <option value="6" selected>六月</option>
+        <option value="7">七月</option>
+        <option value="8">八月</option>
+        <option value="9">九月</option>
+        <option value="10">十月</option>
+        <option value="11">十一月</option>
+        <option value="12">十二月</option>
+    </select>
+</div>
+<script>
+    var select = tinyselect('#tinyselectcontext');
+</script>
+</body>
+
+</html>

@@ -3,10 +3,11 @@
 TinySelect 是一个以灵活为目标的WEB下拉组件。旨在通过灵活的接口和用法，适应各种不同的场景
 
 - 单选/多选
+- 支持直接从`select`元素渲染
 - 提供过滤框以通过关键字简单过滤数据
 - 编程显示/隐藏下拉框
 - 编程过滤数据，可以是关键字或函数
-- 持`select`、`unselect`和`ready`事件
+- 支持`select`、`unselect`和`ready`事件
 - 支持设置初始值
 - 支持后加载数据/重新加载数据
 - 编程设置下拉组件只读属性
@@ -30,6 +31,24 @@ TinySelect 是一个以灵活为目标的WEB下拉组件。旨在通过灵活的
 HTML结构
 ```html
 <div id="tinyselectcontext"></div>
+```
+或
+```html
+<select id="tinyselectcontext">
+    <optgroup label="1-2">
+        <option>1</option>
+        <option value="2">二</option>
+    </optgroup>
+    <optgroup label="3-5">
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="伍">五</option>
+    </optgroup>
+    <option value="6">6</option>
+    <option value="7">7</option>
+    <option value="8">8</option>
+    <option value="9">9</option>
+</select>
 ```
 
 数据
@@ -87,6 +106,29 @@ var ts = tinyselect('#tinyselectcontext', data, true);
 
 注：参数 `true`仅在第二个参数为数据数组时有效。
 
+### 通过`select`元素创建`TinySelect`
+
+通过`select`元素创建`TinySelect`实例时，传入配置需要注意以下问题:
+
+- 支持读取`select`的以下属性：
+    - readonly 生成只读实例
+    - disabled 生成只读实例
+    - multiple 生成多选实例
+- 尽量在配置中通过设置`context`的`css`属性和`style`属性来控制`select`占位元素的样式，如：
+    ```javascript
+     {
+          context:{
+              css: '自定义的样式类名称',
+              style: '自定义样式'
+          }
+     }
+    ```
+    在设置了这些样式时，占位元素的所有样式都靠自定义，`TinySelect`不会自动生成任何样式。
+    否则将应用`select`元素的样式，此时**至少**需要设置`select`元素的**宽度和高度**，
+    当然要是再设置个`border`那就更好了。
+- 支持`optgroup`分组
+
+    
 ### 加点选项的用法
 
 ```javascript
@@ -238,6 +280,13 @@ var ts = tinyselect('#tinyselectcontext', {
     result: {
         // 是否启用多选模式
         multi: false,
+        // 是否显示下拉指示器
+        // false    始终不显示
+        // true     始终显示
+        // null     单选时显示  多选时不显示
+        arrow: null, 
+        // 当从select创建实例时，是否需要将TinySelect的选中值同步到select上，默认为 true
+        sync: true,
         // 渲染选中结果的渲染器，可以通过这个来改变选中结果的渲染
         render: false,
         // 多选结果展示方式，可以设置为 0（显示选中的数量，默认值） 或者 1（显示 选中的项列表）

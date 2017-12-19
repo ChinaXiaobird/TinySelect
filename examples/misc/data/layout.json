@@ -1,88 +1,129 @@
 [
-    {
-        "title": "单选",
-        "file": "basic-single.html",
-        "group": "基础用法"
-    }, {
-        "title": "多选",
-        "file": "basic-multiple.html",
-        "group": "基础用法"
-    }, {
-        "title": "下拉模式-单选",
-        "file": "mode-dropdown-single.html",
-        "group": "显示模式"
-    }, {
-        "title": "下拉模式-多选",
-        "file": "mode-dropdown-multiple.html",
-        "group": "显示模式"
-    }, {
-        "title": "列表模式-单选",
-        "file": "mode-list-single.html",
-        "group": "显示模式"
-    }, {
-        "title": "列表模式-多选",
-        "file": "mode-list-multiple.html",
-        "group": "显示模式"
-    }, {
-        "title": "列表模式-单选(没有头部和底部)",
-        "file": "mode-list-clean.html",
-        "group": "显示模式"
-    }, {
-        "title": "弹出模式-单选",
-        "file": "mode-popup-single.html",
-        "group": "显示模式"
-    }, {
-        "title": "弹出模式-多选",
-        "file": "mode-popup-multiple.html",
-        "group": "显示模式"
-    }, {
-        "title": "列表布局(默认)",
-        "file": "layout-list.html",
-        "group": "布局类型"
-    }, {
-        "title": "网格布局-单选",
-        "file": "layout-grid-single.html",
-        "group": "布局类型"
-    }, {
-        "title": "网格布局-多选",
-        "file": "layout-grid-multiple.html",
-        "group": "布局类型"
-    }, {
-        "title": "表格布局-单选",
-        "file": "layout-table-single.html",
-        "group": "布局类型"
-    }, {
-        "title": "表格布局-多选",
-        "file": "layout-table-multiple.html",
-        "group": "布局类型"
-    }, {
-        "title": "单选设置初始值",
-        "file": "value-single.html",
-        "group": "设置初始值"
-    }, {
-        "title": "多选设置初始值",
-        "file": "value-multiple.html",
-        "group": "设置初始值"
-    }, {
-        "title": "单选只读模式",
-        "file": "readonly-single.html",
-        "group": "只读模式"
-    }, {
-        "title": "多选只读模式",
-        "file": "readonly-multiple.html",
-        "group": "只读模式"
-    }, {
-        "title": "下拉项添加图标",
-        "file": "icon.html",
-        "group": "渲染器"
-    }, {
-        "title": "设置选中值",
-        "file": "set-value.html"
-    }, {
-        "title": "加载数据",
-        "file": "load-data.html"
-    }, {
-        "title": "没有下拉指示器的单选",
-        "file": "without-arrow.html"
-    }
+  {
+    "title": "单选",
+    "file": "basic-single.html",
+    "group": "基础用法"
+  },
+  {
+    "title": "多选",
+    "file": "basic-multiple.html",
+    "group": "基础用法"
+  },
+  {
+    "title": "单选",
+    "file": "from-select-single.html",
+    "group": "从select创建"
+  },
+  {
+    "title": "多选",
+    "file": "from-select-multiple.html",
+    "group": "从select创建"
+  },
+  {
+    "title": "分组",
+    "file": "from-select-group.html",
+    "group": "从select创建"
+  },
+  {
+    "title": "自定义样式",
+    "file": "from-select-customize.html",
+    "group": "从select创建"
+  },
+  {
+    "title": "下拉模式-单选",
+    "file": "mode-dropdown-single.html",
+    "group": "显示模式"
+  },
+  {
+    "title": "下拉模式-多选",
+    "file": "mode-dropdown-multiple.html",
+    "group": "显示模式"
+  },
+  {
+    "title": "列表模式-单选",
+    "file": "mode-list-single.html",
+    "group": "显示模式"
+  },
+  {
+    "title": "列表模式-多选",
+    "file": "mode-list-multiple.html",
+    "group": "显示模式"
+  },
+  {
+    "title": "列表模式-单选(没有头部和底部)",
+    "file": "mode-list-clean.html",
+    "group": "显示模式"
+  },
+  {
+    "title": "弹出模式-单选",
+    "file": "mode-popup-single.html",
+    "group": "显示模式"
+  },
+  {
+    "title": "弹出模式-多选",
+    "file": "mode-popup-multiple.html",
+    "group": "显示模式"
+  },
+  {
+    "title": "列表布局(默认)",
+    "file": "layout-list.html",
+    "group": "布局类型"
+  },
+  {
+    "title": "网格布局-单选",
+    "file": "layout-grid-single.html",
+    "group": "布局类型"
+  },
+  {
+    "title": "网格布局-多选",
+    "file": "layout-grid-multiple.html",
+    "group": "布局类型"
+  },
+  {
+    "title": "表格布局-单选",
+    "file": "layout-table-single.html",
+    "group": "布局类型"
+  },
+  {
+    "title": "表格布局-多选",
+    "file": "layout-table-multiple.html",
+    "group": "布局类型"
+  },
+  {
+    "title": "单选设置初始值",
+    "file": "value-single.html",
+    "group": "设置初始值"
+  },
+  {
+    "title": "多选设置初始值",
+    "file": "value-multiple.html",
+    "group": "设置初始值"
+  },
+  {
+    "title": "单选只读模式",
+    "file": "readonly-single.html",
+    "group": "只读模式"
+  },
+  {
+    "title": "多选只读模式",
+    "file": "readonly-multiple.html",
+    "group": "只读模式"
+  },
+  {
+    "title": "下拉项添加图标",
+    "file": "icon.html",
+    "group": "渲染器"
+  },
+  {
+    "title": "设置选中值",
+    "file": "set-value.html"
+  },
+  {
+    "title": "加载数据",
+    "file": "load-data.html"
+  },
+  {
+    "title": "没有下拉指示器的单选",
+    "file": "without-arrow.html"
+  }
 ]
