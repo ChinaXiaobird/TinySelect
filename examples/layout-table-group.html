@@ -14,27 +14,51 @@
     <script src="../lib/codemirror/mode/xml/xml.js"></script>
     <script src="../lib/codemirror/mode/htmlmixed/htmlmixed.js"></script>
     <script src="../lib/codemirror/mode/css/css.js"></script>
-    <link rel="stylesheet" type="text/css" href="misc/css/icon.css"/>
 </head>
 
 <body>
-<var type="less" src="misc/less/icon.less"></var>
 <div class="tinyselectcontext-container">
     <div id="tinyselectcontext"></div>
 </div>
 <script src="misc/js/source.js"></script>
 <script>
-    $.getJSON('misc/data/data.json').then(function (data) {
+    $.getJSON('misc/data/groupdata.json').then(function (data) {
         tinyselect('#tinyselectcontext', {
+            box: {
+                layout: 'table'
+            },
             item: {
                 data: data,
+                visible: 5,
                 render: function (data, index) {
-                    $(this).find('.tinyselect-item-before').addClass('item-icon item-icon-' + (index % 4));
+                    // 这里创建一点随机数来填充表格，在项目中可以显示数据的其它字段
+                    // 设置宽度是为了让表格列能对齐
+                    $(this).find('.tinyselect-item-before').text(index)
+                        .css({
+                            textAlign: 'center',
+                            width: '40px'
+                        })
+                        .after('<div style="60px">' + getRandomNumber() + '</div>')
+                        .after('<div style="60px">' + getRandomNumber() + '</div>')
+                        .after('<div style="60px">' + getRandomNumber() + '</div>');
+
+                    $(this).find('.tinyselect-item-text')
+                        .css({
+                            width: '60px'
+                        });
+
                     return data.text;
                 }
+            },
+            group:{
+                valueField: 'group'
             }
         });
     });
+
+    function getRandomNumber() {
+        return Math.round(Math.random() * 1000);
+    }
 </script>
 </body>
 

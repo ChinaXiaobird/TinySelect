@@ -476,9 +476,10 @@ TinySelect 目前提供了三个事件：`select`, `unselect`, `ready`。
 - tinyselect-box-layout-list 下拉项列表布局
 - tinyselect-box-layout-grid 下拉项网格布局
 - tinyselect-box-layout-table 下拉项表格布局
-- tinyselect-table-proxy 以表格方式布局时的表格元素
+- tinyselect-scroll-proxy 列表项滚动的代理元素
 - tinyselect-item 下拉项
 - tinyselect-item-selected 下拉项选中状态
 - tinyselect-item-before 下拉项文字前的元素
 - tinyselect-item-text 下拉项文字元素
 - tinyselect-item-after 下拉项文字后的元素
+- tinyselect-group-content 分组项的容器，同一组的项会被放到一起

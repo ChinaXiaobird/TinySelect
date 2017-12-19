@@ -101,6 +101,7 @@
             background-color: @group-bg;
             border-bottom: 1px solid @group-bd;
             border-left: 3px double @group-bd;
+            clear: both;
         }
 
         &-layout-grid {
@@ -116,29 +117,34 @@
         &-layout-table {
             overflow-y: auto;
             overflow-x: hidden;
-            .tinyselect-table-proxy {
+            .tinyselect-scroll-proxy {
                 width: 100%;
-                border-collapse: collapse;
-                display: table;
-                .tinyselect-item {
-                    display: table-row;
-                    float: none;
-                    border: none;
 
-                    > * {
-                        padding: 2px 5px;
+                .tinyselect-group-content {
+                    display: table;
+                    width: 100%;
+                    border-collapse: collapse;
+
+                    .tinyselect-item {
+                        display: table-row;
                         float: none;
-                        display: table-cell;
-                        border: 1px solid @table-bd;
-                        &:first-child {
-                            border-left-width: 1px;
+                        border: none;
+
+                        > * {
+                            padding: 2px 5px;
+                            float: none;
+                            display: table-cell;
+                            border: 1px solid @table-bd;
+                            &:first-child {
+                                border-left-width: 1px;
+                            }
+                            &:last-child {
+                                border-right-width: 1px;
+                            }
                         }
-                        &:last-child {
-                            border-right-width: 1px;
+                        &.tinyselect-item-hover > * {
+                            background-color: @table-hover-bg;
                         }
-                    }
-                    &:hover > * {
-                        background-color: @table-hover-bg;
                     }
                 }
             }

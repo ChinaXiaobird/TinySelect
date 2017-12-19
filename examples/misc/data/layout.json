@@ -10,6 +10,11 @@
     "group": "基础用法"
   },
   {
+    "title": "分组",
+    "file": "basic-group.html",
+    "group": "基础用法"
+  },
+  {
     "title": "单选",
     "file": "from-select-single.html",
     "group": "从select创建"
@@ -80,6 +85,11 @@
     "group": "布局类型"
   },
   {
+    "title": "网格布局-分组",
+    "file": "layout-grid-group.html",
+    "group": "布局类型"
+  },
+  {
     "title": "表格布局-单选",
     "file": "layout-table-single.html",
     "group": "布局类型"
@@ -87,6 +97,11 @@
   {
     "title": "表格布局-多选",
     "file": "layout-table-multiple.html",
+    "group": "布局类型"
+  },
+  {
+    "title": "表格布局-分组",
+    "file": "layout-table-group.html",
     "group": "布局类型"
   },
   {

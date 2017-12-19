@@ -1,51 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0" />
-        <script src="../lib/jquery-1.10.2.min.js"></script>
-        <script src="../src/tinyselect.js"></script>
-        <link rel="stylesheet" type="text/css" href="../dist/tinyselect.css" />
-        <link rel="stylesheet" type="text/css" href="misc/css/example.css" />
-        <link rel="stylesheet" type="text/css" href="../lib/codemirror/codemirror.css" />
-        <script src="../lib/codemirror/codemirror.js"></script>
-        <script src="../lib/codemirror/mode/javascript/javascript.js"></script>
-        <script src="../lib/codemirror/mode/css/css.js"></script>
-        <script src="misc/js/source.js"></script>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0"/>
+    <script src="../lib/jquery-1.10.2.min.js"></script>
+    <script src="../dist/tinyselect.js"></script>
+    <link rel="stylesheet" type="text/css" href="../dist/tinyselect.css"/>
+    <link rel="stylesheet" type="text/css" href="misc/css/example.css"/>
+    <link rel="stylesheet" type="text/css" href="../lib/codemirror/codemirror.css"/>
+    <script src="../lib/codemirror/codemirror.js"></script>
+    <script src="../lib/codemirror/mode/javascript/javascript.js"></script>
+    <script src="../lib/codemirror/mode/xml/xml.js"></script>
+    <script src="../lib/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+    <script src="../lib/codemirror/mode/css/css.js"></script>
+</head>
 
-    <body>
-        <div class="tinyselectcontext-container">
-            <div id="tinyselectcontext"></div>
-        </div>
-        <script>
-            $.getJSON('misc/data/data.json').then(function(data) {
-                tinyselect('#tinyselectcontext', {
-                    box:{
-                        layout: 'table'
-                    },
-                    item: {
-                        data: data,
-                        visible: 5,
-                        render: function(data, index) {
-                            // 这里创建一点随机数来填充表格，在项目中可以显示数据的其它字段
-                            $(this).find('.tinyselect-item-before').text(index)
-                                .css('textAlign', 'center')
-                                .after('<div>' + getRandomNumber() + '</div>')
-                                .after('<div>' + getRandomNumber() + '</div>')
-                                .after('<div>' + getRandomNumber() + '</div>');
+<body>
+<div class="tinyselectcontext-container">
+    <div id="tinyselectcontext"></div>
+</div>
+<script src="misc/js/source.js"></script>
+<script>
+    $.getJSON('misc/data/data.json').then(function (data) {
+        tinyselect('#tinyselectcontext', {
+            box: {
+                layout: 'table'
+            },
+            item: {
+                data: data,
+                visible: 5,
+                render: function (data, index) {
+                    // 这里创建一点随机数来填充表格，在项目中可以显示数据的其它字段
+                    // 设置宽度是为了让表格列能对齐
+                    $(this).find('.tinyselect-item-before').text(index)
+                        .css({
+                            textAlign: 'center',
+                            width: '40px'
+                        })
+                        .after('<div style="60px">' + getRandomNumber() + '</div>')
+                        .after('<div style="60px">' + getRandomNumber() + '</div>')
+                        .after('<div style="60px">' + getRandomNumber() + '</div>');
 
-                            return data.text;
-                        }
-                    }
-                });
-            });
+                    $(this).find('.tinyselect-item-text')
+                        .css({
+                            width: '60px'
+                        });
 
-            function getRandomNumber() {
-                return Math.round(Math.random() * 1000);
+                    return data.text;
+                }
             }
-        </script>
-    </body>
+        });
+    });
+
+    function getRandomNumber() {
+        return Math.round(Math.random() * 1000);
+    }
+</script>
+</body>
 
 </html>

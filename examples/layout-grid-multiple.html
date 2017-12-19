@@ -5,15 +5,16 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0"/>
     <script src="../lib/jquery-1.10.2.min.js"></script>
-    <script src="../src/tinyselect.js"></script>
+    <script src="../dist/tinyselect.js"></script>
     <link rel="stylesheet" type="text/css" href="../dist/tinyselect.css"/>
     <link rel="stylesheet" type="text/css" href="misc/css/example.css"/>
     <link rel="stylesheet" type="text/css" href="../lib/codemirror/codemirror.css"/>
     <script src="../lib/codemirror/codemirror.js"></script>
     <script src="../lib/codemirror/mode/javascript/javascript.js"></script>
+    <script src="../lib/codemirror/mode/xml/xml.js"></script>
+    <script src="../lib/codemirror/mode/htmlmixed/htmlmixed.js"></script>
     <script src="../lib/codemirror/mode/css/css.js"></script>
     <link rel="stylesheet" type="text/css" href="misc/css/gridbox.css"/>
-    <script src="misc/js/source.js"></script>
 </head>
 
 <body>
@@ -24,6 +25,7 @@
 <div class="tips">
     通过附加样式类<b>grid-box</b>：给每一项设置固定的宽度，以使选中效果正常。需要注意的是，下拉框的宽度和每一项的宽度需要自己去计算才能更好的满足需要。
 </div>
+<script src="misc/js/source.js"></script>
 <script>
     $.getJSON('misc/data/data.json').then(function (data) {
         tinyselect('#tinyselectcontext', {

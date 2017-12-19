@@ -5,15 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0"/>
     <script src="../lib/jquery-1.10.2.min.js"></script>
-    <script src="../src/tinyselect.js"></script>
+    <script src="../dist/tinyselect.js"></script>
     <link rel="stylesheet" type="text/css" href="../dist/tinyselect.css"/>
     <link rel="stylesheet" type="text/css" href="misc/css/example.css"/>
     <link rel="stylesheet" type="text/css" href="../lib/codemirror/codemirror.css"/>
     <link rel="stylesheet" type="text/css" href="misc/css/select-customize.css"/>
     <script src="../lib/codemirror/codemirror.js"></script>
     <script src="../lib/codemirror/mode/javascript/javascript.js"></script>
+    <script src="../lib/codemirror/mode/xml/xml.js"></script>
+    <script src="../lib/codemirror/mode/htmlmixed/htmlmixed.js"></script>
     <script src="../lib/codemirror/mode/css/css.js"></script>
-    <script src="misc/js/source.js"></script>
 </head>
 
 <body>
@@ -34,9 +35,10 @@
         <option value="12">十二月</option>
     </select>
 </div>
+<script src="misc/js/source.js"></script>
 <script>
     tinyselect('#tinyselectcontext', {
-        result:{
+        result: {
             css: 'customize',
             // 是否在选择后，将选择的结果同步到原select上，默认为 true
             sync: false

@@ -158,9 +158,15 @@
     var css_mask = css_root + '-mask';
 
     /**
-     * 表格布局时，滚动的代理层  .tinyselect-table-proxy
+     * 滚动的代理层  .tinyselect-scroll-proxy
      */
-    var css_tableProxy = css_root + '-table-proxy';
+    var css_scrollProxy = css_root + '-scroll-proxy';
+
+    /**
+     * 分组时的组内容  .tinyselect-group-content
+     * @type {string}
+     */
+    var css_groupContent = css_root + '-group-content';
 
     /**
      * 下拉项为空时，下拉框的样式 tinyselect-container-empty
@@ -549,6 +555,10 @@
         },
         first: function () {
             return this.addon(':first')
+                .done();
+        },
+        last: function () {
+            return this.addon(':last')
                 .done();
         },
         addon: function (addon) {
@@ -1055,7 +1065,7 @@
         // 实例的配置项
         var option = ts.option;
         // context 的配置项
-        var resultOption=option.result;
+        var resultOption = option.result;
 
         // select的dom对象
         var selectDom = select.get(0);
@@ -1255,7 +1265,7 @@
 
         // 如果是表格布局，那么加一个滚动的代理层
         if (boxoption.layout === layout_table) {
-            box.append(createElement(css_tableProxy));
+            box.append(createElement(css_scrollProxy));
         }
 
         container.append(box);
@@ -1544,7 +1554,7 @@
         box.height('auto');
 
         if (option.box.layout === layout_table) {
-            box.find(Selector.build(css_tableProxy).first()).empty();
+            box.find(Selector.build(css_scrollProxy).first()).empty();
         } else {
             box.empty();
         }
@@ -1602,6 +1612,9 @@
                 boxHeight -= ts.footer.height();
             }
             box.height(boxHeight);
+            if (visibleCount === 0 || visibleCount >= length) {
+                return;
+            }
         } else {
             // 看有没有设置  option.box.style.height
             // 如果没有设置，我就自作聪明，给计算一下
@@ -1659,8 +1672,9 @@
         var keep;
 
         // 如果是表格布局 那么就将元素添加到滚动代理层下
-        if (ts.option.box.layout === layout_table) {
-            box = box.find(Selector.build(css_tableProxy).first());
+        var asTable = ts.option.box.layout === layout_table;
+        if (asTable) {
+            box = box.find(Selector.build(css_scrollProxy).first());
         }
 
         var groupOption = ts.option.group;
@@ -1688,6 +1702,8 @@
         // 数据是不是需要分组
         var groupThem = groupOption.valueField;
 
+        var body;
+
         // 来哇，循环数据项，并在下拉选项容器中添加DOM元素
         for (var i = start; i < end; i++) {
             var data = alldata[i];
@@ -1703,7 +1719,13 @@
                     group.append(groupOption.render.call(ts, group, data));
                 }
                 box.append(group);
+                body = NULL;
                 continue;
+            }
+
+            if (!body) {
+                body = createElement(css_groupContent);
+                box.append(body);
             }
 
             // 创建一个下拉项的元素对象，并且使用 $().data() 把这一项的数据绑定到元素上
@@ -1734,7 +1756,7 @@
                 item.attr(str_groupAttr, data._group_id_);
             }
             // 把新的下拉项追加到下拉项容器中
-            box.append(item);
+            body.append(item);
 
             // 只保存一个下拉项的DOM对象
             if (!keep) {
@@ -1957,8 +1979,8 @@
             // 如果是从select创建的实例，
             // 并且设置了同步选中项，
             // 那么就把select的选中项给搞一下
-            if(ts.fromSelect &&
-            ts.option.result.sync){
+            if (ts.fromSelect &&
+                ts.option.result.sync) {
                 ts.source.val(ts.value());
             }
 
@@ -2065,7 +2087,7 @@
             }
 
             // 找到一个已经具有高亮属性的元素
-            var old = ts.dom.find(Selector.build(css_itemHover).first());
+            var old = ts.box.find(Selector.build(css_itemHover).first());
             // 保存当前要高亮的元素的变量
             var now;
 
@@ -2079,6 +2101,10 @@
                 } else {
                     // 当前有高亮的项，就高亮当前项的后一项
                     now = old.next();
+                    if(!now.length){
+                        now = old.parent().nextAll(Selector.build(css_groupContent).first())
+                            .find(Selector.build(css_item).first());
+                    }
                 }
             } else if (keycode === 38) {
                 // 上方向键
@@ -2089,6 +2115,10 @@
                 } else {
                     // 当前有高亮的项，就高亮当前项的前一项
                     now = old.prev();
+                    if(!now.length){
+                        now = old.parent().prevAll(Selector.build(css_groupContent).first())
+                            .find(Selector.build(css_item).last());
+                    }
                 }
             } else {
                 if (keycode === 32) {
@@ -2119,7 +2149,8 @@
         // 每一项绑定  mouseover事件
         // 通过这个来添加和移除键盘方向键绑定上的样式名
         ts.dom.on('mouseover', Selector.build(css_item).done(), function () {
-            $(this).addClass(css_itemHover).siblings().removeClass(css_itemHover);
+            ts.box.find('.' + css_itemHover).removeClass(css_itemHover);
+            $(this).addClass(css_itemHover);
         });
 
     }
@@ -2130,7 +2161,7 @@
      * @param {jQuery} item 滚动到的下拉项的jquery对象
      */
     function scrollToItem(item) {
-        var box = item.parent();
+        var box = item.parent().parent();
         if (!/auto/i.test(getElementStyleValue(box, 'overflowY'))) {
             box = box.parent();
         }
@@ -2360,7 +2391,7 @@
 
             // 此项未选中，那么
             // 获取上次选中的项，然后取消选中
-            var lastSelected = item.siblings(Selector.build(css_selected).first());
+            var lastSelected = ts.box.find(Selector.build(css_selected).done()).not(item).first();
 
             // 如果有选中的，那么先取消选中
             if (lastSelected.length) {

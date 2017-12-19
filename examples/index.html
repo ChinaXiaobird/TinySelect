@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0" />
         <title>示例 - TinySelect 一个灵活的下拉组件</title>
         <script src="../lib/jquery-1.10.2.min.js"></script>
-        <script src="../src/tinyselect.js"></script>
+        <script src="../dist/tinyselect.js"></script>
         <link rel="stylesheet" type="text/css" href="../dist/tinyselect.css" />
         <link rel="stylesheet" type="text/css" href="misc/css/example.css" />
         <link rel="stylesheet" href="../lib/bootstrap.min.css" />
@@ -128,7 +128,7 @@
                             return item.file !== hash;
                         })) {
                         hash = 'basic-single.html';
-                    };
+                    }
                     
                     examples.load(items)
                         .value(hash, true)
