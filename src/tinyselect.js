@@ -1605,11 +1605,12 @@
         // 如果设置了container高度，就直接box高度了
         if (!isNaN(parseInt(ts.dom.get(0).style.height))) {
             var boxHeight = ts.dom.height();
+
             if (ts.header.is(selector_visible)) {
-                boxHeight -= ts.header.height();
+                boxHeight -= getElementSize(ts.header).height;
             }
             if (ts.footer.is(selector_visible)) {
-                boxHeight -= ts.footer.height();
+                boxHeight -= getElementSize(ts.footer).height;
             }
             box.height(boxHeight);
             if (visibleCount === 0 || visibleCount >= length) {
@@ -2576,8 +2577,12 @@
         var padding = getElementPadding(element);
 
         if (/^border-box$/i.test(getElementStyleValue(element, 'box-sizing'))) {
-            height += padding.top + padding.bottom;
-            width += padding.left + padding.right;
+            height += padding.top + padding.bottom +
+                parseInt(getElementStyleValue(element, 'border-top-width')) +
+                parseInt(getElementStyleValue(element, 'border-bottom-width'));
+            width += padding.left + padding.right +
+                parseInt(getElementStyleValue(element, 'border-left-width')) +
+                parseInt(getElementStyleValue(element, 'border-right-width'));
         }
 
         return {
