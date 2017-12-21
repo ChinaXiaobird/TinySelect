@@ -1616,6 +1616,10 @@
             if (visibleCount === 0 || visibleCount >= length) {
                 return;
             }
+        } else if (visibleCount === 0 || visibleCount >= length) {
+            // 如果可见项的数量大于等于数据项的数量，那么就让box的高度自己高兴吧
+            // 当前  visibleCount为0也是这样
+            return;
         } else {
             // 看有没有设置  option.box.style.height
             // 如果没有设置，我就自作聪明，给计算一下
@@ -1632,13 +1636,6 @@
             if (group.valueField) {
                 var groups = box.find(Selector.build(css_group));
                 groupHeight = groups.first().height() * groups.length;
-            }
-
-            // 如果可见项的数量大于等于数据项的数量，那么就让box的高度自己高兴吧
-            // 当前  visibleCount为0也是这样
-            if (visibleCount === 0 || visibleCount >= length) {
-                box.height(length * itemHeight + groupHeight);
-                return;
             }
 
             box.height(visibleCount * itemHeight + groupHeight);
@@ -2088,60 +2085,40 @@
             }
 
             // 找到一个已经具有高亮属性的元素
-            var old = ts.box.find(Selector.build(css_itemHover).first());
+            var current = ts.box.find(Selector.build(css_itemHover).first());
             // 保存当前要高亮的元素的变量
             var now;
 
-            var keycode = e.keyCode || e.which;
-
-            // 下方向键
-            if (keycode === 40) {
-                // 如果当前没有高亮的，就高亮第一项
-                if (old.length === 0) {
-                    now = getItemsFromDom(ts).eq(0);
-                } else {
-                    // 当前有高亮的项，就高亮当前项的后一项
-                    now = old.next();
-                    if(!now.length){
-                        now = old.parent().nextAll(Selector.build(css_groupContent).first())
-                            .find(Selector.build(css_item).first());
-                    }
-                }
-            } else if (keycode === 38) {
-                // 上方向键
-
-                // 如果当前没有高亮的，就高亮第一项
-                if (old.length === 0) {
-                    now = getItemsFromDom(ts).eq(0);
-                } else {
-                    // 当前有高亮的项，就高亮当前项的前一项
-                    now = old.prev();
-                    if(!now.length){
-                        now = old.parent().prevAll(Selector.build(css_groupContent).first())
-                            .find(Selector.build(css_item).last());
-                    }
-                }
-            } else {
-                if (keycode === 32) {
+            switch (e.keyCode || e.which) {
+                case 40:
+                    // 下方向键
+                    now = getNextItem(ts, current);
+                    break;
+                case 38:
+                    // 上方向键
+                    now = getPrevItem(ts, current);
+                    break;
+                case 32:
                     // 按下空格  相当于选中这项
-                    old.click();
-                } else if (keycode === 27) {
+                    current.click();
+                    return;
+                case 27:
                     // 按下 esc 关闭组件
                     ts.hide();
-                }
-
-                return;
+                    return;
+                default:
+                    return;
             }
 
             if (!now.length) {
-                now = old;
+                now = current;
             }
 
             ts.header.find('.' + css_filter).blur();
             now.focus();
 
             // 给这个项添加高亮样式，并移除其它项的高亮样式
-            old.removeClass(css_itemHover);
+            current.removeClass(css_itemHover);
             now.addClass(css_itemHover);
 
             scrollToItem(now);
@@ -2153,7 +2130,56 @@
             ts.box.find('.' + css_itemHover).removeClass(css_itemHover);
             $(this).addClass(css_itemHover);
         });
+    }
 
+    /**
+     * 获取当前项的前一项
+     * @param {TinySelect} ts 下拉组件实例
+     * @param {jQuery} current 当前项的jQuery对象
+     * @return {jQuery} 前一项的jQuery对象
+     */
+    function getPrevItem(ts, current) {
+        // 如果当前没有高亮的，就高亮第一项
+        if (current.length === 0) {
+            return getItemsFromDom(ts).eq(0);
+        }
+
+        // 当前有高亮的项，就高亮当前项的前一项
+        var item = current.prev();
+        if (!item.length) {
+            // 考虑有分组的情况
+            // 执行到这里表示已经在当前组的第一项了
+            // 尝试到上一组去
+            item = current.parent().prevAll(Selector.build(css_groupContent).first())
+                .find(Selector.build(css_item).last());
+        }
+
+        return item;
+    }
+
+    /**
+     * 获取当前项的后一项
+     * @param {TinySelect} ts 下拉组件实例
+     * @param {jQuery} current 当前项的jQuery对象
+     * @return {jQuery} 后一项的jQuery对象
+     */
+    function getNextItem(ts, current) {
+        // 如果当前没有高亮的，就高亮第一项
+        if (current.length === 0) {
+            return getItemsFromDom(ts).eq(0);
+        }
+
+        // 当前有高亮的项，就高亮当前项的后一项
+        var item = current.next();
+        if (!item.length) {
+            // 考虑有分组的情况
+            // 执行到这里表示已经在当前组的最后一项了
+            // 尝试到下一组去
+            item = current.parent().nextAll(Selector.build(css_groupContent).first())
+                .find(Selector.build(css_item).first());
+        }
+
+        return item;
     }
 
     /**
@@ -2168,8 +2194,9 @@
         }
 
         // 设置滚动条的位置
+        // 最后减一个项的高  是为了不让项一滚动就在最顶部 看起不安逸
         box.stop().animate({
-            scrollTop: item.offset().top - box.offset().top + box.scrollTop()
+            scrollTop: item.offset().top - box.offset().top + box.scrollTop() - getElementSize(item).height
         }, 100);
     }
 
@@ -2566,9 +2593,9 @@
     }
 
     /**
-     * 获取元素的大小(包含元素的padding在内)
+     * 获取元素的大小(包含元素的padding和border-width在内)
      * @param {jQuery} element
-     * @returns {{width, height}}
+     * @returns {{width: int, height: int}}
      */
     function getElementSize(element) {
         var width = element.width();
@@ -2601,6 +2628,11 @@
         return element.css(style);
     }
 
+    /**
+     * 获取元素的padding值
+     * @param {jQuery} element 元素jQuery对象
+     * @return {{top: (Number|number), right: (Number|number), bottom: (Number|number), left: (Number|number)}}
+     */
     function getElementPadding(element) {
         return {
             top: parseInt(getElementStyleValue(element, 'padding-top')) || 0,
@@ -2612,7 +2644,7 @@
 
     /**
      * 计算大小前设置container的visibility样式，使其具体尺寸
-     * @param ts
+     * @param {TinySelect} ts 组件实例
      */
     function calcSizeBegin(ts) {
         ts.dom.css({
@@ -2623,7 +2655,7 @@
 
     /**
      * 计算大小后取消container的visibility样式，以便其它操作正常进行
-     * @param ts
+     * @param TinySelect} ts 组件实例
      */
     function calcSizeEnd(ts) {
         ts.dom.css({

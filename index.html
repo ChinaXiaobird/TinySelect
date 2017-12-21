@@ -2,12 +2,12 @@
 <html>
 
 <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8"/>
     <title></title>
     <script src="lib/jquery-1.10.2.min.js" type="text/javascript" charset="utf-8"></script>
-    <link rel="stylesheet" type="text/css" href="lib/strapdown/strapdown.css" />
-    <link rel="stylesheet" href="lib/bootstrap.min.css" />
-    <link rel="stylesheet" href="examples/misc/css/layout.css" />
+    <link rel="stylesheet" type="text/css" href="lib/strapdown/strapdown.css"/>
+    <link rel="stylesheet" href="lib/bootstrap.min.css"/>
+    <link rel="stylesheet" href="examples/misc/css/layout.css"/>
     <script src="examples/misc/js/layout.js"></script>
     <style>
         #source {
@@ -17,47 +17,51 @@
 </head>
 
 <body>
-    <div id="header">
-        <div class="items">
-            <small>一个灵活的WEB下拉组件</small>
-            <div class="top-nav-item">
-                <a href="https://git.oschina.net/hyjiacan/TinySelect">项目主页</a>
-            </div>
-            <div class="top-nav-item">
-                <a>文档</a>
-            </div>
-            <div class="top-nav-item">
-                <a href="examples/">示例</a>
-            </div>
-            <div class="top-nav-item">
-                <a href="https://git.oschina.net/hyjiacan/TinySelect/attach_files">下载</a>
-            </div>
-            <div class="top-nav-item">
-                <a href="https://git.oschina.net/hyjiacan/TinySelect/issues">问题和建议</a>
-            </div>
-            <div class="top-nav-item">
-                <a href="http://tongji.baidu.com/web/welcome/ico?s=3b889148d3a97c2e11263168434b1788" target="_blank">访问统计</a>
-            </div>
-            <script src='https://git.oschina.net/hyjiacan/TinySelect/star_widget_preview'></script>
-            <script src='https://git.oschina.net/hyjiacan/TinySelect/fork_widget_preview'></script>
+<div id="header">
+    <h1>
+        <span>TinySelect</span>
+        <small>灵活的WEB下拉组件</small>
+    </h1>
+    <div class="items">
+        <div class="top-nav-item">
+            <a href="https://git.oschina.net/hyjiacan/TinySelect">项目主页</a>
+        </div>
+        <div class="top-nav-item">
+            <a>文档</a>
+        </div>
+        <div class="top-nav-item">
+            <a href="examples/">示例</a>
+        </div>
+        <div class="top-nav-item">
+            <a href="https://git.oschina.net/hyjiacan/TinySelect/attach_files">下载</a>
+        </div>
+        <div class="top-nav-item">
+            <a href="https://git.oschina.net/hyjiacan/TinySelect/issues">问题和建议</a>
+        </div>
+        <script src='https://git.oschina.net/hyjiacan/TinySelect/star_widget_preview'></script>
+        <script src='https://git.oschina.net/hyjiacan/TinySelect/fork_widget_preview'></script>
+        <div class="top-nav-item">
+            <a href="http://tongji.baidu.com/web/welcome/ico?s=3b889148d3a97c2e11263168434b1788"
+               target="_blank">访问统计</a>
         </div>
     </div>
+</div>
 
+<div id="content-proxy">
     <xmp id="source"></xmp>
-    <script type="text/javascript" src="lib/strapdown/strapdown.js"></script>
-    <script type="text/javascript">
-        $(function() {
-            $.get('README.md', function(data) {
-                $('#source').html(data);
-            }).then(function() {
-                renderMD();
-                $('.navbar:first').addClass('navbar-default')
-                    .find('.navbar-inner .container')
-                    .append($('#header').prepend($('h1:first')));
-                fixHeader();
-            });
+</div>
+<script type="text/javascript" src="lib/strapdown/strapdown.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $.get('README.md', function (data) {
+            $('#source').html(data);
+        }).then(function () {
+            renderMD();
+            $('.container h1:first').remove();
+            $('.navbar').addClass('navbar-default').find('.navbar-inner .container').append($('#header'));
         });
-    </script>
+    });
+</script>
 </body>
 
 </html>
