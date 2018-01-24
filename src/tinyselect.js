@@ -290,29 +290,22 @@
      */
     var evt_notSupportedMsg = '不支持此事件类型';
 
-    //-----------------使用jQuery选择器时用到的字符串
+    //---------------用到的字符串
     /**
-     * css 选择器用到的":visible"符号
-     */
-    var selector_visible = ':visible';
-
-    //-------------------html标签称名称
-    /**
-     * 标签名称 span
-     */
-    var tag_span = 'span';
-
-    /**
-     * 创建input[type=checbox]标签的字符串  这个checkbox有一个样式类
-     * tinyselect-selectall
-     */
-    var tag_checkbox = '<input type="checkbox" style="vertical-align:-2px;" class="' +
-        css_root + '-selectall" />';
-
-    /**
-     * 通过jQuery存放每一项数据的属性名称，如： $(item).data('data'; itemdata);
+     * 通过jQuery存放每一项数据的属性名称，如： $(item).data('data': itemdata);
      */
     var str_data = 'data';
+
+    /**
+     * 通过jQuery存放的元素显示模式属性名称，如： $(item).data('display': 'block');
+     */
+    var str_display = 'display';
+
+    /**
+     * 标记 visible 字符串
+     * @type {string}
+     */
+    var str_visible = 'visible';
 
     /**
      * 每一项的序号索引属性名称
@@ -328,6 +321,25 @@
      * 字符串模板的占位符，这个在渲染下拉项数量时使用
      */
     var str_placeholder = '%s';
+
+
+    //-----------------使用jQuery选择器时用到的字符串
+    /**
+     * css 选择器用到的":visible"符号
+     */
+    var selector_visible = ':' + str_visible;
+
+    //-------------------html标签称名称
+    /**
+     * 标签名称 span
+     */
+    var tag_span = 'span';
+
+    /**
+     * 创建input[type=checbox]标签的字符串  这个checkbox有一个样式类
+     * tinyselect-selectall
+     */
+    var tag_checkbox = '<input type="checkbox" style="vertical-align:-2px;" class="{0}-selectall" />'.fill(css_root);
 
     /**
      * 显示模式-下拉
@@ -386,6 +398,9 @@
         mode: mode_dropdown,
         // 是否支持键盘操作，默认为 true
         keyboard: TRUE,
+        // 结果框的tabindex属性，当设置了这个属性的时候
+        // 就可以通过 tab 打开下拉框
+        tabindex: 0,
         // 附加的样式类名称
         css: NULL,
         // 下拉框容器的样式
@@ -628,9 +643,9 @@
     /**
      * 根据上下文DOM元素初始化下拉框，如果已经初始化过了，那就返回对应的实例对象
      *
-     * @param {jQuery|String|HtmlElement} selector 用来创建下拉组件的上下文DOM元素
-     * @param {Object|Array} option 选项或数据
-     * @param {Boolean} multi 是否可以多选，true为可多选，false为仅单选(默认);仅当option为数组时此参数有效
+     * @param {jQuery|String|HTMLElement} selector 用来创建下拉组件的上下文DOM元素
+     * @param {Object|Array} [option] 选项或数据
+     * @param {Boolean} [multi] 是否可以多选，true为可多选，false为仅单选(默认);仅当option为数组时此参数有效
      * @return {TinySelect|undefined} 下拉实例
      */
     function TinySelect(selector, option, multi) {
@@ -674,7 +689,7 @@
         /**
          * 初始化函数，用来创建创建下拉实例
          *
-         * @param {HtmlElement} source 下拉的源DOM元素，下拉将在这个元素的上方或下方显示
+         * @param {HTMLElement|jQuery} source 下拉的源DOM元素，下拉将在这个元素的上方或下方显示
          * @param  {Object|Array} option 选项或数据
          * @param {Boolean} multi 是否可以多选，true为可多选，false为仅单选(默认);仅当option为数组时此参数有效
          * @return {TinySelect} 新的实例
@@ -890,7 +905,7 @@
             // 判断是通过关键字过滤还是传入了自定义的过滤器（函数）
             var isfn = $.isFunction(keyOrFn);
 
-            var groupThem = !!ts.option.group.valueField;
+            var groupThem = ts.option.group.valueField;
 
             // 取到所有下拉项的DOM
             var items = getItemsFromDom(ts);
@@ -967,7 +982,7 @@
         /**
          * 设置或获取下拉的选中值
          *
-         * @param {any} [val] 配置的item.valueField字段的值，可以是单个值(单选)或数组(多选)。不传时获取值
+         * @param {*} [val] 配置的item.valueField字段的值，可以是单个值(单选)或数组(多选)。不传时获取值
          * @param {Boolean} [trigger=false] 是否引发事件，默认为 false
          * @return {*} 返回值或实例
          */
@@ -1167,35 +1182,46 @@
      * 渲染上下文DOM元素里面的DOM，创建结果容器和下拉指示元素
      */
     function renderContext(ts) {
-        // 不是列表模式时，总是渲染上下文
-        if (ts.option.mode === mode_list) {
-            return;
-        }
+        var option = ts.option;
 
         var context = ts.context;
-        var option = ts.option.result;
+        var resultOption = option.result;
+        // 假设用户设置了这个 tabindex 选项
+        var idx = parseInt(option.tabindex);
+        // 如果设置的值不能搞成数字或者是个负数  那么就设置不使用tabindex这个属性
+        idx = option.tabindex = isNaN(idx) || idx < 0 ? FALSE : idx;
 
+        // 设置  tabindex 属性
+        if (idx !== FALSE) {
+            context.attr('tabindex', idx);
+        }
         // 添加存放选中结果的容器
-        context.addClass(css_context)
-            .append(createElement(css_contextResult));
-
-        if (option.css) {
-            context.addClass(option.css);
-        }
-
-        if (option.style) {
-            context.css(option.style);
-        }
+        context.addClass(css_context);
 
         // 初始化时如果设置了只读属性，那么给上下文元素添加只读的样式类
-        if (ts.option.readonly) {
+        if (option.readonly) {
             context.addClass(css_readonly);
         }
 
+        if (resultOption.css) {
+            context.addClass(resultOption.css);
+        }
+
+        if (resultOption.style) {
+            context.css(resultOption.style);
+        }
+
+        // 不是列表模式时，总是渲染上下文
+        if (option.mode === mode_list) {
+            return;
+        }
+
+        context.append(createElement(css_contextResult));
+
         // 设置为 false
         // 或设置为 null 并且多选的话就不添加下拉指示器
-        var showArrow = option.arrow;
-        if (showArrow === FALSE || (showArrow === NULL && option.multi)) {
+        var showArrow = resultOption.arrow;
+        if (showArrow === FALSE || (showArrow === NULL && resultOption.multi)) {
             return;
         }
 
@@ -1223,6 +1249,11 @@
         var container = ts.dom = createElement(css_container)
             .addClass('{0}-mode-{0}'.fill(css_root, option.mode));
 
+        var tabindex = option.tabindex;
+        if (tabindex !== FALSE) {
+            container.attr('tabindex', tabindex);
+        }
+
         // 以列表模式显示
         switch (option.mode) {
             case mode_list:
@@ -1230,8 +1261,8 @@
                 // 同时，也不会应用样式 width height position
                 // 如果context的父级只有context一个元素，那就设置宽度为auto
                 // 这样可以避免滚动条出现后挡住下拉组件右侧
-                option.style.width = context.siblings().length ? context.width() :
-                    'auto';
+                option.style.width = context.siblings(':visible').length ? context.width() : 'auto';
+
                 option.style.height = context.height() || 'auto';
                 var position = getElementStyleValue(context, 'position');
                 option.style.position = /static/i.test(position) ? 'relative' : position;
@@ -1278,7 +1309,7 @@
      * 渲染下拉框的头部DOM
      *
      * @param {TinySelect} ts 当前的TinySelect实例
-     * @param {any} option 选项，创建下拉组件时传入的参数与默认参数合并得到
+     * @param {*} option 选项，创建下拉组件时传入的参数与默认参数合并得到
      * @return {jQuery} header的jquery对象
      */
     function renderHeader(ts, option) {
@@ -1328,7 +1359,7 @@
             if (/^change$/i.test(filteroption.trigger) ?
                     // 按下非输入键 (不可见字符)不处理
                     ($.trim(String.fromCharCode(e.keyCode || e.which)) !== '' &&
-                    filter.data('last') === val) : e.keyCode !== 13) {
+                        filter.data('last') === val) : e.keyCode !== 13) {
                 return;
             }
 
@@ -1827,23 +1858,14 @@
      * @param {TinySelect} ts 当前的TinySelect实例
      */
     function bindShowBoxEvent(ts) {
-        var context = ts.context;
-
-        var dom = ts.dom;
-
-        context.click(function (e) {
+        // 上下文框在获得焦点时 显示下拉框
+        ts.context.focus(function () {
             // 如果是只读的，就不显示出来
             if (ts.option.readonly) {
                 return;
             }
-
-            // 没有点上下文DOM元素或上下文DOM元素的子元素
-            if (!context.is(e.target) && context.find(e.target).length === 0) {
-                return;
-            }
-
             // 下拉是关闭的
-            if (!dom.is(selector_visible)) {
+            if (!ts.dom.is(selector_visible)) {
                 // 就打开
                 ts.show();
             }
@@ -1903,12 +1925,16 @@
     function fixSize(ts) {
         var dom = ts.dom;
 
-        // 修正容器大小
-        // 如果container的高度超出了父容器的高度，那么就将container的高度设置为与父容器一致
-        var parentHeight = dom.parent().height();
+        // 只有没有设置成100%时才计算这个
+        if ('100%' !== dom.get(0).style.height) {
+            // 修正容器大小
+            // 如果container的高度超出了父容器的高度，那么就将container的高度设置为与父容器一致
+            var parentHeight = dom.parent().height();
 
-        if (ts.option.mode === mode_list || dom.height() >= parentHeight) {
-            dom.height(parentHeight);
+            if (parentHeight > 0 && (ts.option.mode === mode_list || dom.height() >= parentHeight)) {
+                var b = getElementBorder(dom);
+                dom.height(parentHeight - b.top - b.bottom);
+            }
         }
         // container 的原始高度，这里不能取 jQuery的计算高度
         var nativeHeight = dom.get(0).style.height;
@@ -2099,7 +2125,8 @@
                     now = getPrevItem(ts, current);
                     break;
                 case 32:
-                    // 按下空格  相当于选中这项
+                case 13:
+                    // 按下空格或回车相当于选中这项
                     current.click();
                     return;
                 case 27:
@@ -2248,7 +2275,7 @@
     function emitItemEvent(ts, eventType, item) {
         var target = item.get(0);
 
-        emitEvent(ts, eventType, {
+        return emitEvent(ts, eventType, {
             target: target,
             data: getData(item),
             index: item.attr(str_indexAttr)
@@ -2272,9 +2299,13 @@
         arg.type = eventType;
 
         // 根据绑定顺序循环调用事件处理函数
-        ts.events[eventType].forEach(function (fn) {
-            fn.call(ts, arg);
-        });
+        // 倒序调用  以支持 return false
+        var events = ts.events[eventType];
+        for (var i = events.length - 1; i >= 0; i--) {
+            if (events[i].call(ts, arg) === FALSE) {
+                return FALSE;
+            }
+        }
     }
 
     /**
@@ -2282,7 +2313,7 @@
      * 单选返回一个值，多选返回数组
      *
      * @param {TinySelect} ts 当前的TinySelect实例
-     * @return {any} 选中的值
+     * @return {*} 选中的值
      */
     function getValue(ts) {
         // 表示数据项值的字段名称
@@ -2308,11 +2339,13 @@
      * 设置选中的值
      *
      * @param {TinySelect} ts 当前的TinySelect实例
-     * @param {any} value 要设置的选中的值，根据单选和多选的不同传入数组和非数组
+     * @param {*} value 要设置的选中的值，根据单选和多选的不同传入数组和非数组
      * @param {Boolean} trigger 是否触发事件
      */
     function setValue(ts, value, trigger) {
         var item;
+        // 是否在多选模式
+        var multi = ts.option.result.multi;
 
         // 为了后面将值与项的数据进行比较的方便(使用indexOf判断值)，
         // 这里把传进来的值搞成数组
@@ -2326,10 +2359,14 @@
 
             // 是否命中
             var hit = selectedValues.indexOf(
-                    getData(item)[ts.option.item.valueField]) !== -1;
+                getData(item)[ts.option.item.valueField]) !== -1;
 
             // 没有命中就比较下一项了
             if (!hit) {
+                // 多选时取消这一项的选中状态
+                if (multi) {
+                    deselectItem(ts, item, trigger);
+                }
                 continue;
             }
 
@@ -2337,7 +2374,7 @@
             setItemValue(ts, item, FALSE, trigger);
 
             // 如果是单选，就返回，不再检查后续的项了
-            if (!ts.option.result.multi) {
+            if (!multi) {
                 return;
             }
         }
@@ -2446,7 +2483,6 @@
 
         // 需要切换状态  就是取消选中
         deselectItem(ts, item, trigger);
-        return;
     }
 
     /**
@@ -2457,15 +2493,17 @@
      * @param {Boolean} trigger 是否触发事件
      */
     function selectItem(ts, item, trigger) {
-        // 给下拉项添加选中的样式 tinyselect-item-selected
-        item.addClass(css_selected);
 
         // 是否需要触发事件
         if (trigger) {
 
             // 触发选中事件
-            emitItemEvent(ts, evt_select, item);
+            if (emitItemEvent(ts, evt_select, item) === FALSE) {
+                return;
+            }
         }
+        // 给下拉项添加选中的样式 tinyselect-item-selected
+        item.addClass(css_selected);
     }
 
     /**
@@ -2476,15 +2514,17 @@
      * @param {Boolean} trigger 是否触发事件
      */
     function deselectItem(ts, item, trigger) {
-        // 移除下拉项的选中样式
-        item.removeClass(css_selected);
 
         // 是否需要触发事件
         if (trigger) {
 
             // 触发取消选中事件
-            emitItemEvent(ts, evt_unselect, item);
+            if (emitItemEvent(ts, evt_unselect, item) === FALSE) {
+                return;
+            }
         }
+        // 移除下拉项的选中样式
+        item.removeClass(css_selected);
     }
 
     /**
@@ -2555,10 +2595,11 @@
      * 使用jQuery.fn.data获取数据
      *
      * @param {jQuery} element 要获取数据的元素的jquery对象
+     * @param {string} [name=data] 保存数据的键名
      * @return {string|int} 保存的数据
      */
-    function getData(element) {
-        return element.data(str_data);
+    function getData(element, name) {
+        return element.data(name || str_data);
     }
 
     /**
@@ -2566,9 +2607,10 @@
      *
      * @param {jQuery} element 要设置数据的元素的jquery对象
      * @param {Object} value 要保存的数据
+     * @param {string} [name=data] 要保存数据的键名
      */
-    function setData(element, value) {
-        return element.data(str_data, value);
+    function setData(element, value, name) {
+        return element.data(name || str_data, value);
     }
 
     /**
@@ -2643,10 +2685,28 @@
     }
 
     /**
+     * 获取元素的border宽度值
+     * @param {jQuery} element 元素jQuery对象
+     * @return {{top: (Number|number), right: (Number|number), bottom: (Number|number), left: (Number|number)}}
+     */
+    function getElementBorder(element) {
+        return {
+            top: parseInt(getElementStyleValue(element, 'border-top')) || 0,
+            right: parseInt(getElementStyleValue(element, 'border-right')) || 0,
+            bottom: parseInt(getElementStyleValue(element, 'border-bottom')) || 0,
+            left: parseInt(getElementStyleValue(element, 'border-left')) || 0
+        };
+    }
+
+    /**
      * 计算大小前设置container的visibility样式，使其具体尺寸
      * @param {TinySelect} ts 组件实例
      */
     function calcSizeBegin(ts) {
+        // 记住原始的显示模式
+        // 以在计算完成后恢复
+        setData(ts.dom, getElementStyleValue(ts.dom, str_display), str_display);
+
         ts.dom.css({
             display: 'block',
             visibility: 'hidden'
@@ -2655,12 +2715,12 @@
 
     /**
      * 计算大小后取消container的visibility样式，以便其它操作正常进行
-     * @param TinySelect} ts 组件实例
+     * @param {TinySelect} ts 组件实例
      */
     function calcSizeEnd(ts) {
         ts.dom.css({
-            display: 'none',
-            visibility: 'visible'
+            display: getData(ts.dom, str_display) || 'none',
+            visibility: str_visible
         });
     }
 
