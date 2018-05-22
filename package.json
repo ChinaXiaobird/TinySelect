@@ -7,7 +7,8 @@
         "combo",
         "dropdown",
         "tinyselect",
-        "list"
+        "list",
+        "popup"
     ],
     "homepage": "http://gitee.com/hyjiacan/TinySelect",
     "example": "http://hyjiacan.oschina.io/tinyselect",
@@ -19,7 +20,7 @@
         "url": "https://gitee.com/hyjiacan/TinySelect.git"
     },
     "license": "MIT",
-    "author": "hyjiacan <dev@hyjiacan.com> (http://www.hyjiacan.com)",
+    "author": "hyjiacan <hyjiacan@163.com> (http://www.hyjiacan.com)",
     "main": "dist/tinyselect.js",
     "dependencies": {
         "jquery": "^1.11.0"

@@ -68,7 +68,7 @@ module.exports = function(grunt) {
             },
             dist: {
                 files: {
-                    'dist/tinyselect.css': 'src/tinyselect.less'
+                    'dist/tinyselect.min.css': 'src/tinyselect.less'
                 }
             }
         },
@@ -79,7 +79,7 @@ module.exports = function(grunt) {
             },
             dist: {
                 files: {
-                    'dist/<%= pkg.name %>.js': ['src/<%= pkg.name %>.js']
+                    'dist/<%= pkg.name %>.min.js': ['src/<%= pkg.name %>.js']
                 }
             }
         },

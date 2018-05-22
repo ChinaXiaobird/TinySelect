@@ -24,8 +24,8 @@ TinySelect 是一个以灵活为目标的WEB下拉组件。旨在通过灵活的
 将`dist`目录复制到你的项目中，然后在页面上添加引用
 
 ```html
-<link rel="stylesheet" type="text/css" href="dist/tinyselect.css" />
-<script type="text/javascript" src="dist/tinyselect.js" />
+<link rel="stylesheet" type="text/css" href="dist/tinyselect.min.css" />
+<script type="text/javascript" src="dist/tinyselect.min.js" />
 ```
 
 HTML结构
@@ -347,13 +347,14 @@ var option = {
 
 |名称|类型|描述|
 |:-:|:-:|:-|
-|isReady|boolean|初级初始化是否完成，如果有初始化数据，此属性将会在数据渲染完成后才为`true`|
+|ready|boolean|初级初始化是否完成，如果有初始化数据，此属性将会在数据渲染完成后才为`true`|
 |source|jQuery|创建实例的元素|
 |context|jQuery|当从`select`创建时，是新创建的占位元素，否则为创建实例的元素 |
 |dom|jQuery|整个下拉框元素|
 |header|jQuery|下拉部分的头部|
 |box|jQuery|下拉项的列表容器|
 |footer|jQuery|下拉部分的底部|
+|placeholder|jQuery|未选择元素时的占位符|
 |events|Object|注册的事件集合|
 |fromSelect|boolean|是否从`select`元素创建的实例|
 

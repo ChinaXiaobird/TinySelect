@@ -133,6 +133,11 @@
     var css_contextWithArrow = css_context + '-with-arrow';
 
     /**
+     * 给创建下拉组件时传入的DOM对象里面显示占位字符串的元素添加的样式类名称： tinyselect-context-placeholder
+     */
+    var css_contextPlaceholder = css_context + '-placeholder';
+
+    /**
      * 给创建下拉组件时传入的DOM对象里面存放结果的元素添加的样式类名称： tinyselect-context-result
      */
     var css_contextResult = css_context + '-result';
@@ -515,6 +520,8 @@
             style: {}
         },
         result: {
+            // 未选择项时的占位字符串
+            placeholder: '请选择',
             // 是否启用多选模式
             multi: FALSE,
             // 是否显示下拉指示器
@@ -696,7 +703,7 @@
             var ts = this;
 
             // 可以通过此属性检测组件是否可用
-            ts.isReady = FALSE;
+            ts.ready = FALSE;
 
             // 如果传的是一个数组，那么就使用默认的选项，
             // 并且将这个数组设为下拉的数据源
@@ -753,7 +760,7 @@
 
             // 渲染项
             ts.load(option.item.data, function () {
-                ts.isReady = TRUE;
+                ts.ready = TRUE;
                 // 这里搞了个回调，以在所有项渲染完成后调用的ready回调
                 if (option.ready) {
                     option.ready.call(ts);
@@ -1218,6 +1225,10 @@
             return;
         }
 
+        // 占位符
+        context.append(ts.placeholder = createElement(css_contextPlaceholder).html(option.result.placeholder));
+
+        // 结果容器
         context.append(createElement(css_contextResult));
 
         // 设置为 false
@@ -1278,8 +1289,7 @@
                 break;
             case mode_popup:
                 // 弹出模式时，添加mask层
-                var mask = ts.mask = createElement(css_mask);
-                $(document.body).append(mask.append(container));
+                $(document.body).append((ts.mask = createElement(css_mask)).append(container));
                 break;
         }
 
@@ -2335,11 +2345,12 @@
      * @return {*} 选中的值
      */
     function getValue(ts) {
+        var option = ts.option;
         // 表示数据项值的字段名称
-        var valueField = ts.option.item.valueField;
+        var valueField = option.item.valueField;
 
         // 单选
-        if (!ts.option.result.multi) {
+        if (!option.result.multi) {
             // 单选的时候找到第一个选中的项就行了，所以加个 first 限定符
             // 这里也是假装考虑一下查询的性能
             var item = getItemsFromDom(ts, Selector.build(css_selected).first());
@@ -2362,9 +2373,10 @@
      * @param {Boolean} trigger 是否触发事件
      */
     function setValue(ts, value, trigger) {
+        var option = ts.option;
         var item;
         // 是否在多选模式
-        var multi = ts.option.result.multi;
+        var multi = option.result.multi;
 
         // 为了后面将值与项的数据进行比较的方便(使用indexOf判断值)，
         // 这里把传进来的值搞成数组
@@ -2378,7 +2390,7 @@
 
             // 是否命中
             var hit = selectedValues.indexOf(
-                getData(item)[ts.option.item.valueField]) !== -1;
+                getData(item)[option.item.valueField]) !== -1;
 
             // 没有命中就比较下一项了
             if (!hit) {
@@ -2521,6 +2533,9 @@
                 return;
             }
         }
+        if (ts.option.mode !== mode_list) {
+            ts.placeholder.hide();
+        }
 
         // 如果是从select创建的 那么就更新select的值
         updateSelectSource(ts);
@@ -2545,6 +2560,9 @@
             if (emitItemEvent(ts, evt_unselect, item) === FALSE) {
                 return;
             }
+        }
+        if (ts.option.mode !== mode_list) {
+            ts.placeholder.show();
         }
 
         updateSelectSource(ts);
