@@ -1833,7 +1833,7 @@
 
         // 根据配置设置默认的选中项
         if (itemoption.value) {
-            ts.value(itemoption.value, TRUE);
+            ts.value(itemoption.value);
         }
 
         // 调用下拉项渲染完成的回调函数
@@ -2103,6 +2103,7 @@
                     scrollTop: result[0].scrollHeight
                 });
             }
+
             // 设置多选的选中项数量
             setData(count, (getData(count) || 0) + 1);
 
@@ -2115,7 +2116,6 @@
         if (!multi) {
             return;
         }
-
         // 绑定取消选中事件
         ts.on(evt_unselect, function (e) {
             // 点击项后，如果需要取消选中这一项，那么就把已经选中的结果从结果容器中移除
@@ -2125,7 +2125,8 @@
                 .remove();
 
             // 设置多选的选中项数量
-            setData(count, getData(count) - 1);
+            var currentSelectedCount = getData(count);
+            setData(count, currentSelectedCount > 0 ? currentSelectedCount - 1 : 0);
 
             // 显示多选的选中项数量
             setSelectedCount(option, count);
