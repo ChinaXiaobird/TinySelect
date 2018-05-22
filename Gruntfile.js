@@ -82,16 +82,6 @@ module.exports = function(grunt) {
                     'dist/<%= pkg.name %>.min.js': ['src/<%= pkg.name %>.js']
                 }
             }
-        },
-        copy: {
-            img: {
-                files: [{
-                    expand: true,
-                    cwd: 'src',
-                    src: ['img/*'],
-                    dest: 'dist'
-                }]
-            }
         }
     });
 
@@ -99,8 +89,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-contrib-copy');
 
-    grunt.registerTask('default', ['jshint', 'less', 'uglify', 'copy']);
+    grunt.registerTask('default', ['jshint', 'less', 'uglify']);
 
 };

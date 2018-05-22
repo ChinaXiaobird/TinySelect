@@ -522,6 +522,8 @@
         result: {
             // 未选择项时的占位字符串
             placeholder: '请选择',
+            // 是否显示清除选中的按钮
+            clear: TRUE,
             // 是否启用多选模式
             multi: FALSE,
             // 是否显示下拉指示器
@@ -2533,15 +2535,14 @@
                 return;
             }
         }
-        if (ts.option.mode !== mode_list) {
-            ts.placeholder.hide();
-        }
-
-        // 如果是从select创建的 那么就更新select的值
-        updateSelectSource(ts);
 
         // 给下拉项添加选中的样式 tinyselect-item-selected
         item.addClass(css_selected);
+
+        // 选中项时  隐藏占位符
+        if (ts.option.mode !== mode_list) {
+            ts.placeholder.hide();
+        }
     }
 
     /**
@@ -2552,7 +2553,7 @@
      * @param {Boolean} trigger 是否触发事件
      */
     function deselectItem(ts, item, trigger) {
-
+        var option = ts.option;
         // 是否需要触发事件
         if (trigger) {
 
@@ -2561,13 +2562,18 @@
                 return;
             }
         }
-        if (ts.option.mode !== mode_list) {
-            ts.placeholder.show();
-        }
 
-        updateSelectSource(ts);
         // 移除下拉项的选中样式
         item.removeClass(css_selected);
+
+        // 取消所有选中项时  隐藏占位符
+        // 只有在非列表模式时才显示这货
+        // ts.value() 得到的是字符串(多选)或数组(单选)
+        if (option.mode !== mode_list){
+            if(option.result.multi ? 0 === ts.value().length : undefined === ts.value()) {
+                ts.placeholder.show();
+            }
+        }
     }
 
     /**
@@ -2765,18 +2771,6 @@
             display: getData(ts.dom, str_display) || 'none',
             visibility: str_visible
         });
-    }
-
-    /**
-     * 当是从select元素创建时，更新select的值
-     * @param {TinySelect} ts 组件实例
-     */
-    function updateSelectSource(ts) {
-        if (!ts.fromSelect) {
-            return;
-        }
-
-        ts.source.val(ts.value());
     }
 
     /**
