@@ -1890,7 +1890,12 @@
      */
     function bindShowBoxEvent(ts) {
         // 上下文框在获得焦点时 显示下拉框
-        ts.context.focus(function () {
+        // 在ie下 点击时不会focus 所以顺便绑定个click事件
+        // 为什么非要用focus？ 直接用click不行？
+        // 当然不是了，因为我设置了tabindex，我希望用键盘也能操作这货
+        // tabindex 就是为了让div 能够focus的
+        // 所以 为了兼容键盘 这里就兼听这俩事件
+        ts.context.on('click focus', function () {
             // 如果是只读的，就不显示出来
             if (ts.option.readonly) {
                 return;
@@ -2569,8 +2574,8 @@
         // 取消所有选中项时  隐藏占位符
         // 只有在非列表模式时才显示这货
         // ts.value() 得到的是字符串(多选)或数组(单选)
-        if (option.mode !== mode_list){
-            if(option.result.multi ? 0 === ts.value().length : undefined === ts.value()) {
+        if (option.mode !== mode_list) {
+            if (option.result.multi ? 0 === ts.value().length : undefined === ts.value()) {
                 ts.placeholder.show();
             }
         }
