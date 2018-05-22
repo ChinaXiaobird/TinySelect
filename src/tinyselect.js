@@ -276,14 +276,9 @@
     var evt_unselect = 'unselect';
 
     /**
-     * 事件类型 ready
-     */
-    var evt_ready = 'ready';
-
-    /**
      * 支持的事件类型
      */
-    var evt_supported = [evt_select, evt_unselect, evt_ready];
+    var evt_supported = [evt_select, evt_unselect];
 
     /**
      * 在使用.on(evnetName, handler)时，传入了不支持的eventType时，在控制台输出此信息
@@ -392,6 +387,8 @@
      * 这些项会被附加到 TinySelect上面,可以通过  TinySelect.defaults.xxx 来修改这些默认配置
      */
     var defaultOption = {
+        // 组件初始化完成后，可用时的回调
+        ready: NULL,
         // 组件是否是只读的
         readonly: FALSE,
         // 显示模式，可以设置的值为： dropdown(默认下拉模式), list(列表模式), popup(弹出模式)
@@ -698,6 +695,9 @@
             // 保存实例对象到变量里面
             var ts = this;
 
+            // 可以通过此属性检测组件是否可用
+            ts.isReady = FALSE;
+
             // 如果传的是一个数组，那么就使用默认的选项，
             // 并且将这个数组设为下拉的数据源
             if ($.isArray(option)) {
@@ -725,6 +725,7 @@
                     throw new Error('Item layout "{0}" is not supported,\nhere is the valid modes: {0}'.fill(layout, support_layout.join()));
                 }
             }
+            option = ts.option;
 
             // 源元素
             // 假设源不是select元素
@@ -751,11 +752,12 @@
             bindEvent(ts);
 
             // 渲染项
-            ts.load(ts.option.item.data, function (data) {
-                // 这里搞了个回调，以在所有项渲染完成后触发组件的ready 事件
-                emitEvent(ts, evt_ready, {
-                    data: data
-                });
+            ts.load(option.item.data, function () {
+                ts.isReady = TRUE;
+                // 这里搞了个回调，以在所有项渲染完成后调用的ready回调
+                if (option.ready) {
+                    option.ready.call(ts);
+                }
             });
 
             // 返回实例对象
@@ -955,10 +957,10 @@
                 // 如果传了过滤器，那就调用哇，这里会设置过滤器的this对象为这一项的DOM对象，同时会将这项的数据作为一个参数传入
                 // 过滤器函数的返回值决定了这一项是否会被命中（true）
                 if (isfn ? keyOrFn.call(this, data) :
-                        // 传的是字符串，直接看项的显示文字里面有没有这个字符串
-                        (ts.option.header.filter.matchCase ?
-                            item.text().indexOf(keyOrFn.toString()) !== -1 :
-                            item.text().toLowerCase().indexOf(keyOrFn.toString().toLowerCase()) !== -1)) {
+                    // 传的是字符串，直接看项的显示文字里面有没有这个字符串
+                    (ts.option.header.filter.matchCase ?
+                        item.text().indexOf(keyOrFn.toString()) !== -1 :
+                        item.text().toLowerCase().indexOf(keyOrFn.toString().toLowerCase()) !== -1)) {
                     result.push({
                         item: item,
                         data: data
@@ -1357,9 +1359,9 @@
             }
 
             if (/^change$/i.test(filteroption.trigger) ?
-                    // 按下非输入键 (不可见字符)不处理
-                    ($.trim(String.fromCharCode(e.keyCode || e.which)) !== '' &&
-                        filter.data('last') === val) : e.keyCode !== 13) {
+                // 按下非输入键 (不可见字符)不处理
+                ($.trim(String.fromCharCode(e.keyCode || e.which)) !== '' &&
+                    filter.data('last') === val) : e.keyCode !== 13) {
                 return;
             }
 
@@ -1590,6 +1592,11 @@
             box.empty();
         }
 
+        // 如果是从select创建的，就先把select的选项给清空
+        if (ts.fromSelect) {
+            ts.source.empty();
+        }
+
         // 清除选中结果，这个放在box.empty()后面，可以在选中项很多时执行更快
         // 当然，这个快是我猜的
         clearSelection(ts);
@@ -1706,6 +1713,10 @@
             box = box.find(Selector.build(css_scrollProxy).first());
         }
 
+        var fromSelect = ts.fromSelect;
+        // 当是从select创建时，后面会用到的
+        var source = ts.source;
+
         var groupOption = ts.option.group;
 
         // 所有的数据项对象
@@ -1749,6 +1760,10 @@
                 }
                 box.append(group);
                 body = NULL;
+                // 如果是select，给select添加项
+                if (fromSelect) {
+                    source.append(createElement('', 'optgroup').text(data.text).attr('value', data.id));
+                }
                 continue;
             }
 
@@ -1790,6 +1805,10 @@
             // 只保存一个下拉项的DOM对象
             if (!keep) {
                 keep = item;
+            }
+            // 如果是select，给select添加项
+            if (fromSelect) {
+                source.append(createElement('', 'option').text(data.text).attr('value', data.id));
             }
         }
 
@@ -2502,6 +2521,10 @@
                 return;
             }
         }
+
+        // 如果是从select创建的 那么就更新select的值
+        updateSelectSource(ts);
+
         // 给下拉项添加选中的样式 tinyselect-item-selected
         item.addClass(css_selected);
     }
@@ -2523,6 +2546,8 @@
                 return;
             }
         }
+
+        updateSelectSource(ts);
         // 移除下拉项的选中样式
         item.removeClass(css_selected);
     }
@@ -2625,7 +2650,7 @@
             .attr(str_groupAttr, groupid).done());
 
         if (items.filter(Selector.build()
-                .attr(str_groupAttr, groupid).visible()).length === 0) {
+            .attr(str_groupAttr, groupid).visible()).length === 0) {
             // groupid 分组下没有可见的项了，隐藏这个分组头
             group.hide();
         } else {
@@ -2699,7 +2724,7 @@
     }
 
     /**
-     * 计算大小前设置container的visibility样式，使其具体尺寸
+     * 计算大小前设置container的visibility样式，使其具体尺寸可用
      * @param {TinySelect} ts 组件实例
      */
     function calcSizeBegin(ts) {
@@ -2722,6 +2747,18 @@
             display: getData(ts.dom, str_display) || 'none',
             visibility: str_visible
         });
+    }
+
+    /**
+     * 当是从select元素创建时，更新select的值
+     * @param {TinySelect} ts 组件实例
+     */
+    function updateSelectSource(ts) {
+        if (!ts.fromSelect) {
+            return;
+        }
+
+        ts.source.val(ts.value());
     }
 
     /**

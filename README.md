@@ -116,10 +116,12 @@ var ts = tinyselect('#tinyselectcontext', data, true);
     - multiple 生成多选实例
 - 尽量在配置中通过设置`context`的`css`属性和`style`属性来控制`select`占位元素的样式，如：
     ```javascript
-     {
+     var option = {
           context:{
               css: '自定义的样式类名称',
-              style: '自定义样式'
+              style: {
+                // 自定义样式 
+              }
           }
      }
     ```
@@ -128,6 +130,7 @@ var ts = tinyselect('#tinyselectcontext', data, true);
     当然要是再设置个`border`那就更好了。
 - 支持`optgroup`分组
 
+> 选中或取消选中时，结果将自动同步至原始的`select`元素上，也就是说，可以直接通过原始`select`取到选中项的结果。
     
 ### 加点选项的用法
 
@@ -154,7 +157,9 @@ var ts = tinyselect('#tinyselectcontext', {
 创建下拉组件的默认选项。这里列出了所有可用的项，这些项会被附加到`TinySelect`上面,可以通过修改`tinyselect.defaults` 来改变这些默认配置，如： `tinyselect.defaults.result.multi = true` 这样的写法会让页面内之后创建的下拉组件都默认启用多选模式。
 
 ```javascript
-{
+var option = {
+    // 组件初始化完成后，可用时的回调(由`ready`事件变化而来)，其上下文对象指向实例的`this`对象
+    ready: null,
     // 组件是否是只读的
     readonly: false,
     // 显示模式，可以设置的值为： dropdown(默认下拉模式), list(列表模式), popup(弹出模式)
@@ -162,7 +167,7 @@ var ts = tinyselect('#tinyselectcontext', {
     // 是否支持键盘操作，默认为 true
     keyboard: true,
     // 附加的样式类名称
-    css: NULL,
+    css: null,
     // 下拉框容器的样式
     style: {
         // 这个行高是必须的，覆盖这些样式时，需要注意，
@@ -192,12 +197,12 @@ var ts = tinyselect('#tinyselectcontext', {
             // 过滤时是否区分大小写，默认为 false
             matchCase: false,
             // 附加的样式类名称
-            css: NULL,
+            css: null,
             // 过滤框的样式
             style: {}
         },
         // 附加的样式类名称
-        css: NULL,
+        css: null,
         // 头部样式
         style: {}
     },
@@ -209,7 +214,7 @@ var ts = tinyselect('#tinyselectcontext', {
         // 可设置的值有： list(列表布局，默认值), grid(网格布局), table(表格布局)
         layout: layout_list,
         // 附加的样式类名称
-        css: NULL,
+        css: null,
         // 下拉项容器的样式
         style: {}
     },
@@ -226,7 +231,7 @@ var ts = tinyselect('#tinyselectcontext', {
         // 分组的渲染器
         render: false,
         // 附加的样式类名称
-        css: NULL,
+        css: null,
         // 下拉项容器的样式
         style: {}
     },
@@ -251,9 +256,9 @@ var ts = tinyselect('#tinyselectcontext', {
         render: false,
         // 是否在数据项比设定的 visible 多时使用异步渲染(true)，
         // 在数据较多时建议设置为true，以避免大量的dom操作阻塞页面执行
-        async: TRUE,
+        async: true,
         // 附加的样式类名称
-        css: NULL,
+        css: null,
         // 每一个下拉项的样式
         style: {}
     },
@@ -273,7 +278,7 @@ var ts = tinyselect('#tinyselectcontext', {
          */
         selectedTpl: '选中' + str_placeholder + '项/',
         // 附加的样式类名称
-        css: NULL,
+        css: null,
         // 底部的样式
         style: {}
     },
@@ -293,7 +298,7 @@ var ts = tinyselect('#tinyselectcontext', {
         // 这是一个预留配置项
         type: 0,
         // 附加的样式类名称
-        css: NULL,
+        css: null,
         // 多选结果的样式
         style: {}
     }
@@ -336,78 +341,48 @@ var ts = tinyselect('#tinyselectcontext', {
 
 不同的布局基本上都是通过不同的样式来实现的。
 
+## 属性
+
+`TinySelect`将一些常用的东西放到了实例的属性上:
+
+|名称|类型|描述|
+|:-:|:-:|:-|
+|isReady|boolean|初级初始化是否完成，如果有初始化数据，此属性将会在数据渲染完成后才为`true`|
+|source|jQuery|创建实例的元素|
+|context|jQuery|当从`select`创建时，是新创建的占位元素，否则为创建实例的元素 |
+|dom|jQuery|整个下拉框元素|
+|header|jQuery|下拉部分的头部|
+|box|jQuery|下拉项的列表容器|
+|footer|jQuery|下拉部分的底部|
+|events|Object|注册的事件集合|
+|fromSelect|boolean|是否从`select`元素创建的实例|
+
 ## 接口
 
-TinySelect 提供了一组易用的操作接口。这些接口除了取值类的，其它都返回了下拉组件的实例，也就是说非取值类的接口可以进行链式调用。
+`TinySelect` 提供了一组易用的操作接口。这些接口除了取值类的，其它都返回了下拉组件的实例，也就是说非取值类的接口可以进行链式调用。
 
-### show(callback: Function) : TinySelect
-
-显示下拉组件。
-
-**callback** 下拉组件显示后的回调函数。这个回调函数没有参数，其上下文`this`对象指向下拉组件的弹出框DOM对象。
-
-### hide(callback: Function) : TinySelect
-
-隐藏下拉组件。
-
-**callback** 下拉组件隐藏后的回调函数。这个回调函数没有参数，其上下文`this`对象指向下拉组件的弹出框DOM对象。
-
-### value(value: Any, trigger: Boolean) : TinySelect|Any
-
-设置/获取下拉组件的选中值。当传了参数时是设置值；不传参数时，是获取值，此时若是单选则返回选中的值，多选则返回选中的值的数组。
-
-**value** 第一个参数是要设置的值，单选时传入单个值，多选时传入值数组。
-
-**trigger** 是否触发事件。`true`触发，`false`不触发。在设置值时，如果希望结果框中显示设置的值，这个参数需要传入`true`。默认为`false`。
-
-> 在初始化下拉组件后立即调用 `.value()` 设置值的时候，需要确保渲染已经完成，即事件`ready`已经被触发。
-
-### filter(keyOrFn: String|Function, toggle: Boolean) : Array
-
-根据关键字或函数过滤数据项。返回所有命中项的数据组成的数组。
-
-**keyOrFn** 关键字或过滤器函数。当传入字符串的时候，会在下拉项中查找匹配的文本，若有匹配则返回这项的数据；传入函数时，通过函数的返回值决定是否命中（返回`true`表示命中），这个函数的上下文`this`对象是某一个下拉项的DOM对象，并且有一个参数`data`，`data`是这个数据项的数据。
-
-**toggle** 是否切换显示状态，即隐藏未命中项，显示命中项。默认为`false`。
-
-### clear() : TinySelect
-
-清除下拉组件的选中项。
-
-### load(data: Array) : TinySelect
-
-加载数据，重新渲染下拉项，调用这个函数前的所有数据项都会在重新渲染前被清空。
-
-**data** 组件会根据这个数据重新渲染所有的下拉项。
-
-### readonly(readonly: Boolean) : Boolean|TinySelect
-
-设置/获取下拉组件的只读模式。当传了参数时是设置模式，不传参数时为获取模式。
-
-**readonly** 为`true`时设置下拉组件只读，为`false`取消下拉组件的只读模式；不传时为获取当前是否是只读模式。
-
-### on(eventType: String, handler: Function) : TinySelect
-
-绑定事件到下拉组件上。
-
-**eventType** 事件类型名。，目前支持`select`,`unselect`,`ready`，传入其它值无效。
-
-**handler** 事件的处理函数。详见下方 [事件][0] 部分
-
-### off(eventType: String, handler: Function) : TinySelect
-
-从下拉组件上取消事件的绑定。参数同上面的**on**函数。需要注意的是，在调用`off`的时候，`handler`需要是函数引用，这个函数引用应该与调用`on`的时候是同一个引用，所以，调用`on`时使用了匿名函数，那么在这里无法解除绑定。
+|签名|描述|参数|返回值|
+|:-|:-|:-|:-|:-|
+|show(callback: Function)|显示下拉框|**callback** 下拉组件显示后的回调函数。这个回调函数没有参数，其上下文`this`对象指向下拉组件的弹出框DOM对象|TinySelect|
+|hide(callback: Function)|隐藏下拉框|**callback** 下拉组件隐藏后的回调函数。这个回调函数没有参数，其上下文`this`对象指向下拉组件的弹出框DOM对象|TinySelect|
+|value(value: Any, trigger: Boolean)|设置/获取下拉组件的选中值。<br/>注意:在初始化下拉组件后立即调用 `.value()` 设置值的时候，需要确保渲染已经完成，即选项中的`ready`回调已经被调用。|**value** 第一个参数是要设置的值，单选时传入单个值，多选时传入值数组。<br/>**trigger** 是否触发事件。`true`触发，`false`不触发。在设置值时，如果希望结果框中显示设置的值，这个参数需要传入`true`。默认为`false`。|TinySelect\|Any<br/>当传了参数时是设置值；不传参数时，是获取值，此时若是单选则返回选中的值，多选则返回选中的值的数组。|
+|filter(keyOrFn: String\|Function, toggle: Boolean)|根据关键字或函数过滤数据项。|**keyOrFn** 关键字或过滤器函数。当传入字符串的时候，会在下拉项中查找匹配的文本，若有匹配则返回这项的数据；传入函数时，通过函数的返回值决定是否命中（返回`true`表示命中），这个函数的上下文`this`对象是某一个下拉项的DOM对象，并且有一个参数`data`，`data`是这个数据项的数据。<br/>**toggle** 是否切换显示状态，即隐藏未命中项，显示命中项。默认为`false`。|Array<br/>返回所有命中项的数据组成的数组。|
+|clear()|清除下拉组件的选中项。||TinySelect|
+|load(data: Array)|加载数据，重新渲染下拉项。<br/>注意：调用这个函数前的所有数据项都会在重新渲染前被清空。|**data** 组件会根据这个数据重新渲染所有的下拉项|TinySelect|
+|readonly(readonly: Boolean)|设置/获取下拉组件的只读模式。当传了参数时是设置模式，不传参数时为获取模式。|**readonly** 为`true`时设置下拉组件只读，为`false`取消下拉组件的只读模式；不传时为获取当前是否是只读模式|Boolean\|TinySelect|
+|on(eventType: String, handler: Function)|绑定事件到下拉组件上。|**eventType** 事件类型名。目前支持`select`,`unselect`，传入其它值无效。<br/>**handler** 事件的处理函数。详见下方 [事件](#事件) 部分|TinySelect|
+|off(eventType: String, handler: Function)|从下拉组件上取消事件的绑定。<br/>注意：在调用`off`的时候，`handler`需要是函数引用，这个函数引用应该与调用`on`的时候是同一个引用，所以，调用`on`时使用了匿名函数，那么在这里无法解除绑定。|参数同上面的**on**函数|TinySelect|
 
 ## 事件
 
-TinySelect 目前提供了三个事件：`select`, `unselect`, `ready`。
+TinySelect 目前提供了两个事件：`select`, `unselect`。
 
 ### select: Function
 
 下拉项被选中时触发的事件。上下文`this`指向下拉组件，处理函数有一个参数`e`，其结构如下：
 
 ```javascript
-{
+e = {
     data: Object,
     index: Number,
     target: HtmlElement,
@@ -417,15 +392,9 @@ TinySelect 目前提供了三个事件：`select`, `unselect`, `ready`。
 
 ，其中，`data`是下拉项的数据，`index`是下拉项的索引，`target`是下拉项的DOM元素，`type`是事件类型。
 
-### select: Function
+### unselect: Function
 
-下拉项被取消选中时触发的事件。参数与用法与`select`事件相同。
-
-### ready: Function
-
-下拉组件的所有下拉项渲染完成后触发的事件，这个事件触发后表示下拉组件初始化已经完成，可以正常使用了。
-
-> 在初始化下拉组件后立即调用 `.value()` 设置值的时候，需要确保渲染已经完成。
+下拉项被取消选中时触发的事件。上下文`this`指向下拉组件，参数与用法与`select`事件相同。
 
 ## 自定义样式
 
