@@ -34,7 +34,7 @@
     background-color: @con-bg;
     border: 1px solid @con-bd;
     height: auto;
-    color: @con-fg;
+    color: @con-color;
     z-index: 99;
     .border-box();
     &:not(.tinyselect-mode-list) {
@@ -91,8 +91,8 @@
                         display: inline-block;
                         content: ' ';
                         border: 1px solid transparent;
-                        border-left-color: @item-selected-fg;
-                        border-bottom-color: @item-selected-fg;
+                        border-left-color: @item-selected-color;
+                        border-bottom-color: @item-selected-color;
                         transform: rotate(-52deg);
                         vertical-align: 4px;
                     }
@@ -190,7 +190,7 @@
             display: none !important;
         }
         .tinyselect-box {
-            color: @empty-fg;
+            color: @empty-color;
         }
     }
 }
@@ -208,12 +208,15 @@
         line-height: inherit;
         font: inherit;
         color: #999;
+        padding: 0 3px;
     }
 
     &-result {
         height: inherit;
         overflow-y: auto;
         line-height: inherit;
+        padding: 0 3px;
+        .border-box();
         .tinyselect-result-item {
             display: block;
             .text-ellipsis();
@@ -222,7 +225,7 @@
             text-align: center;
             margin: 2px 5px;
             background-color: @result-bg;
-            color: @result-fg;
+            color: @result-color;
             float: left;
             height: 24px;
             line-height: 24px;
