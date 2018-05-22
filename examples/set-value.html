@@ -29,10 +29,10 @@
             },
             result: {
                 multi: true
+            },
+            ready: function () {
+                ts.value([2, 6, 8], true);
             }
-        });
-        ts.on('ready', function () {
-            ts.value([2, 6, 8], true);
         });
     });
 </script>

@@ -2010,7 +2010,7 @@
 
         var dom = ts.dom;
         // 给window对象绑定点击事件，以关闭下拉组件
-        $(win).mouseup(function (e) {
+        $(win).mousedown(function (e) {
             var target = e.target;
 
             // 如果是点击了 context 或者 点击了下拉组件，啥也不做
