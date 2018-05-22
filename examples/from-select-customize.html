@@ -39,9 +39,18 @@
 <script>
     tinyselect('#tinyselectcontext', {
         result: {
+            style: {
+                height: '60px',
+                border: '1px solid #ccc'
+            },
             css: 'customize',
             // 是否在选择后，将选择的结果同步到原select上，默认为 true
-            sync: false
+            sync: false,
+            item: {
+                style: {
+                    color: 'red'
+                }
+            }
         }
     });
 </script>

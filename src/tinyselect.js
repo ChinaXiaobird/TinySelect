@@ -531,17 +531,26 @@
             // true     始终显示
             // null     单选时显示  多选时不显示
             arrow: NULL,
-            // 渲染选中结果的渲染器，可以通过这个来改变选中结果的渲染
-            render: FALSE,
             // 当从select创建实例时，是否需要将TinySelect的选中值同步到select上，默认为 true
             sync: TRUE,
+            // 选中结果框的渲染器，可以通过这个来改变选中结果框的渲染
+            render: FALSE,
             // 多选结果展示方式，可以设置为 0（显示选中的数量，默认值） 或者 1（显示 选中的项列表）
             // 这是一个预留配置项
             type: 0,
-            // 附加的样式类名称
-            css: NULL,
-            // 多选结果的样式
-            style: {}
+            // 多选结果框附加的样式类名称
+            css: null,
+            // 多选结果框的样式
+            style: {},
+            // 多选结果选项
+            item: {
+                // 选中结果的渲染器，可以通过这个来改变选中结果的渲染
+                render: FALSE,
+                // 结果项的样式
+                style: NULL,
+                // 附加的样式类名称
+                css: NULL
+            }
         }
     };
 
@@ -1220,6 +1229,10 @@
 
         if (resultOption.style) {
             context.css(resultOption.style);
+        }
+
+        if (resultOption.render) {
+            resultOption.render.call(context);
         }
 
         // 不是列表模式时，总是渲染上下文
@@ -1997,7 +2010,7 @@
 
         var dom = ts.dom;
         // 给window对象绑定点击事件，以关闭下拉组件
-        $(win).click(function (e) {
+        $(win).mouseup(function (e) {
             var target = e.target;
 
             // 如果是点击了 context 或者 点击了下拉组件，啥也不做
@@ -2073,7 +2086,7 @@
         // 是否多选
         var multi = resultOption.multi;
 
-        var render = resultOption.render;
+        var render = resultOption.item.render;
 
         // 绑定一下下拉组件的项选中事件
         ts.on(evt_select, function (e) {
@@ -2273,16 +2286,17 @@
      * @return {jQuery|undefined} 新创建的项的jQuery对象
      */
     function renderMultiSelectResultItem(ts, text, index) {
+        var option = ts.option;
+        var itemOption = option.result.item;
+
         // 列表模式不渲染这个
-        if (ts.option.mode === mode_list) {
+        if (option.mode === mode_list) {
             return;
         }
 
         // 创建元素
-        return createElement(css_result)
-        // 设置样式
-            .css(ts.option.result.style)
-            // 设置项的索引属性 data-tiny-index
+        var item = createElement(css_result)
+        // 设置项的索引属性 data-tiny-index
             .attr(str_indexAttr, index)
             // 设置显示的文本
             .append(createElement(css_resultText, tag_span).html(text))
@@ -2291,7 +2305,7 @@
             // .tinyselect-item-selected[data-tiny-index]:first
             .append(createElement(css_resultLink, tag_span).click(function () {
                 // 如果是只读的，就不能操作
-                if (ts.option.readonly) {
+                if (option.readonly) {
                     return;
                 }
 
@@ -2300,6 +2314,13 @@
 
                 return FALSE;
             }));
+        if (itemOption.css) {
+            item.addClass(itemOption.css);
+        }
+        if (itemOption.style) {
+            item.css(itemOption.style);
+        }
+        return item;
     }
 
     /**

@@ -35,7 +35,14 @@
 </div>
 <script src="misc/js/source.js"></script>
 <script>
-    var select = tinyselect('#tinyselectcontext');
+    var select = tinyselect('#tinyselectcontext', {
+        result:{
+            style:{
+                height: '24px',
+                border: '1px solid #ccc'
+            }
+        }
+    });
 </script>
 </body>
 
