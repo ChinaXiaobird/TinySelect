@@ -545,6 +545,7 @@
             // 多选结果选项
             item: {
                 // 选中结果的渲染器，可以通过这个来改变选中结果的渲染
+                // 上下文指`this`向下拉组件
                 render: FALSE,
                 // 结果项的样式
                 style: NULL,
@@ -1038,13 +1039,17 @@
          */
         load: function (data, callback) {
             var ts = this;
-
+            var itemOption = ts.option.item;
             // 将新的数据绑定到组件上
             // 为了保持数据的纯洁性，用clone创建数据的副本来玩
-            ts.option.item.data = clone(data);
+            itemOption.data = clone(data);
 
             // 渲染下拉项
             renderItems(ts, function () {
+                // 根据配置设置默认的选中项
+                if (itemOption.value) {
+                    ts.value(itemOption.value);
+                }
                 fixSize(ts);
                 if (callback) {
                     callback.call(ts, ts.option.item.data);
@@ -1237,6 +1242,8 @@
 
         // 不是列表模式时，总是渲染上下文
         if (option.mode === mode_list) {
+            // 为了方便其它地方使用 没有时创建一个空的
+            ts.result = $();
             return;
         }
 
@@ -1244,7 +1251,7 @@
         context.append(ts.placeholder = createElement(css_contextPlaceholder).html(option.result.placeholder));
 
         // 结果容器
-        context.append(createElement(css_contextResult));
+        context.append(ts.result = createElement(css_contextResult));
 
         // 设置为 false
         // 或设置为 null 并且多选的话就不添加下拉指示器
@@ -1495,7 +1502,7 @@
                 }
 
                 // 把选中的项取消选中，并触发一个 unselect 事件
-                deselectItem(ts, item, TRUE);
+                unselectItem(ts, item, TRUE);
             });
         });
 
@@ -1724,7 +1731,7 @@
      * @param {Array} alldata 要渲染的所有数据，这些数据可能是经过分组处理的
      * @param {Function} callback 所有项渲染完成后的回调函数
      * @param {Number} start 开始渲染的索引
-     * @param {Number} count 渲染的数量
+     * @param {Number} [count] 渲染的数量
      * @return  {jQuery|undefined} 渲染的第一项，这个返回给调用函数，调用函数根据这一项来计算每一项的高度
      */
     function renderSpecifiedItems(ts, box, itemoption, alldata, callback, start, count) {
@@ -1842,17 +1849,8 @@
             return keep;
         }
 
-        // 所有下拉项渲染完成后要做的事
-
-        // 根据配置设置默认的选中项
-        if (itemoption.value) {
-            ts.value(itemoption.value);
-        }
-
         // 调用下拉项渲染完成的回调函数
-        if (callback) {
-            callback.call(ts, originData);
-        }
+        callback.call(ts, originData);
 
         return keep;
     }
@@ -1876,10 +1874,6 @@
 
         // 绑定下拉项的点击事件，这个用于下拉项的选中和取消选中
         bindItemClickEvent(ts);
-
-        // 绑定下拉组件的默认事件，这里绑定的是下拉组件定义的事件的默认处理函数
-        // 比如选中的结果渲染等
-        bindDefaultItemEvent(ts);
 
         if (ts.option.keyboard) {
             // 绑定键盘事件，这里主要是绑定一下方向键移动时高亮下拉项的事件
@@ -2067,86 +2061,6 @@
     }
 
     /**
-     * 绑定下拉项的默认事件。这里绑定了默认的select和unselect事件，
-     * 以实现选中结果的填充效果
-     *
-     * @param {TinySelect} ts 当前的TinySelect实例
-     */
-    function bindDefaultItemEvent(ts) {
-        // 找出存放选中结果的容器元素对象
-        // .tinyselect-context-result:first
-        var result = ts.context.find(Selector.build(css_contextResult).first());
-
-        // 选中数量的元素对象
-        var count = getSelectedCount(ts);
-
-        var option = ts.option;
-        var resultOption = option.result;
-
-        // 是否多选
-        var multi = resultOption.multi;
-
-        var render = resultOption.item.render;
-
-        // 绑定一下下拉组件的项选中事件
-        ts.on(evt_select, function (e) {
-            // 根据配置  option.item.textField 属性取出数据项的显示文本
-            var text = e.data[option.item.textField];
-
-            // 如果有定义选中结果的渲染器，那么调用渲染器
-            // 并将渲染器的返回值作为选中结果项的显示文本
-            text = !!render ? render.call(e.target, e.data) : text;
-
-            // 如果是单选，直接将选中项的文本设置为结果的文本并返回
-            if (!multi) {
-                result.html(text);
-                return;
-            }
-
-            //------------- 处理多选的结果项
-
-            // 不是列表模式才渲染结果DOM
-            if (option.mode !== mode_list) {
-                // 添加一个结果项到结果容器中
-                var item = renderMultiSelectResultItem(ts, text, e.index);
-                result.append(item);
-
-                // 滚动到最底部
-                result.stop().animate({
-                    scrollTop: result[0].scrollHeight
-                });
-            }
-
-            // 设置多选的选中项数量
-            setData(count, (getData(count) || 0) + 1);
-
-            // 显示多选的选中项数量
-            setSelectedCount(option, count);
-        });
-
-        // 如果是单选，就不绑定取消选中的事件了
-        // 因为这里的绑定是用于改变选中结果的，单选的结果不需要复杂的改变
-        if (!multi) {
-            return;
-        }
-        // 绑定取消选中事件
-        ts.on(evt_unselect, function (e) {
-            // 点击项后，如果需要取消选中这一项，那么就把已经选中的结果从结果容器中移除
-            // 移除的依据是元素的 data-tiny-index 属性
-            // .tinyselect-result-item[data-tiny-index=n]:first
-            result.find(Selector.build(css_result).attr(str_indexAttr, e.index).first())
-                .remove();
-
-            // 设置多选的选中项数量
-            var currentSelectedCount = getData(count);
-            setData(count, currentSelectedCount > 0 ? currentSelectedCount - 1 : 0);
-
-            // 显示多选的选中项数量
-            setSelectedCount(option, count);
-        });
-    }
-
-    /**
      * 绑定键盘事件，这里主要是绑定一下方向键移动时高亮下拉项的事件
      *
      * @param {TinySelect} ts 下拉组件实例
@@ -2310,7 +2224,7 @@
                 }
 
                 // 取消选中这一项，并触发取消选中的事件
-                deselectItem(ts, getItemsFromDom(ts, Selector.build().attr(str_indexAttr, index).first()), TRUE);
+                unselectItem(ts, getItemsFromDom(ts, Selector.build().attr(str_indexAttr, index).first()), TRUE);
 
                 return FALSE;
             }));
@@ -2425,7 +2339,7 @@
             if (!hit) {
                 // 多选时取消这一项的选中状态
                 if (multi) {
-                    deselectItem(ts, item, trigger);
+                    unselectItem(ts, item, trigger);
                 }
                 continue;
             }
@@ -2450,7 +2364,7 @@
         var items = getItemsFromDom(ts);
 
         // 清空选中结果
-        ts.context.find(Selector.build(css_contextResult).first()).empty();
+        ts.result.empty();
 
         // 对多选选中项的清除
         if (ts.option.result.multi) {
@@ -2458,7 +2372,7 @@
             // .tinyselect-item-selected
             items.filter(Selector.build(css_selected).done()).each(function (index, item) {
                 // 取消选中项并触发  unselect 事件
-                deselectItem(ts, $(item), TRUE);
+                unselectItem(ts, $(item), TRUE);
             });
 
             return;
@@ -2475,7 +2389,7 @@
         }
 
         // 取消选中项并触发  unselect 事件
-        deselectItem(ts, item, TRUE);
+        unselectItem(ts, item, TRUE);
     }
 
     /**
@@ -2521,7 +2435,7 @@
             // 如果有选中的，那么先取消选中
             if (lastSelected.length) {
                 // 取消选中上次选中的项
-                deselectItem(ts, lastSelected, trigger);
+                unselectItem(ts, lastSelected, trigger);
             }
 
             // 选中当前的项
@@ -2542,7 +2456,7 @@
         }
 
         // 需要切换状态  就是取消选中
-        deselectItem(ts, item, trigger);
+        unselectItem(ts, item, trigger);
     }
 
     /**
@@ -2556,7 +2470,6 @@
 
         // 是否需要触发事件
         if (trigger) {
-
             // 触发选中事件
             if (emitItemEvent(ts, evt_select, item) === FALSE) {
                 return;
@@ -2570,6 +2483,9 @@
         if (ts.option.mode !== mode_list) {
             ts.placeholder.hide();
         }
+
+        // 渲染选中结果
+        afterSelect(ts, getData(item), item.attr(str_indexAttr));
     }
 
     /**
@@ -2579,7 +2495,7 @@
      * @param {jQuery} item 要取消选择的项
      * @param {Boolean} trigger 是否触发事件
      */
-    function deselectItem(ts, item, trigger) {
+    function unselectItem(ts, item, trigger) {
         var option = ts.option;
         // 是否需要触发事件
         if (trigger) {
@@ -2601,6 +2517,106 @@
                 ts.placeholder.show();
             }
         }
+
+        // 移除选中结果
+        afterUnselect(ts, item.attr(str_indexAttr));
+    }
+
+    /**
+     * 项被选中后的操作
+     * @param {TinySelect} ts 组件实例
+     * @param {object} data 选中项的数据
+     * @param {int} index 选中项的索引
+     */
+    function afterSelect(ts, data, index) {
+        // 存放选中结果的容器元素对象
+        var result = ts.result;
+
+        // 选中数量的元素对象
+        var count = getSelectedCount(ts);
+
+        var option = ts.option;
+        var resultOption = option.result;
+
+        // 是否多选
+        var multi = resultOption.multi;
+        // 选择结果项的渲染器
+        var render = resultOption.item.render;
+        // 根据配置  option.item.textField 属性取出数据项的显示文本
+        var text = data[option.item.textField];
+
+        // 如果有定义选中结果的渲染器，那么调用渲染器
+        // 并将渲染器的返回值作为选中结果项的显示文本
+        text = render ? render.call(ts, data) : text;
+
+        // 如果是从select创建的 那就设置select的对应项选中
+        if (ts.fromSelect) {
+            ts.source.val(ts.value());
+        }
+
+        // 如果是单选，直接将选中项的文本设置为结果的文本并返回
+        if (!multi) {
+            result.text(text);
+            return;
+        }
+
+        //------------- 处理多选的结果项
+
+        // 不是列表模式才渲染结果DOM
+        if (option.mode !== mode_list) {
+            // 添加一个结果项到结果容器中
+            var item = renderMultiSelectResultItem(ts, text, index);
+            result.append(item);
+
+            // 滚动到最底部
+            result.stop().animate({
+                scrollTop: result[0].scrollHeight
+            });
+        }
+
+        // 设置多选的选中项数量
+        setData(count, (getData(count) || 0) + 1);
+
+        // 显示多选的选中项数量
+        setSelectedCount(option, count);
+    }
+
+    /**
+     * 项被取消选中后的操作
+     * @param {TinySelect} ts 组件实例
+     * @param {int} index 选中项的索引
+     */
+    function afterUnselect(ts, index) {
+        var option = ts.option;
+        // 是否多选
+        var multi = option.result.multi;
+
+        // 如果是从select创建的 那就设置select的对应项选中
+        if (ts.fromSelect) {
+            ts.source.val(ts.value());
+        }
+
+        // 如果是单选，就不绑定取消选中的事件了
+        // 因为这里的绑定是用于改变选中结果的，单选的结果不需要复杂的改变
+        if (!multi) {
+            return;
+        }
+
+        // 选中数量的元素对象
+        var count = getSelectedCount(ts);
+
+        // 点击项后，如果需要取消选中这一项，那么就把已经选中的结果从结果容器中移除
+        // 移除的依据是元素的 data-tiny-index 属性
+        // .tinyselect-result-item[data-tiny-index=n]:first
+        ts.result.find(Selector.build(css_result).attr(str_indexAttr, index).first())
+            .remove();
+
+        // 设置多选的选中项数量
+        var currentSelectedCount = getData(count);
+        setData(count, currentSelectedCount > 0 ? currentSelectedCount - 1 : 0);
+
+        // 显示多选的选中项数量
+        setSelectedCount(option, count);
     }
 
     /**

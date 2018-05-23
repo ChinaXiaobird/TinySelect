@@ -70,6 +70,11 @@
         var iframe = $('iframe').get(0);
 
         iframe.onload = function () {
+            if($(window).width() < 1200){
+                $('#hehe').show();
+            } else {
+                $('#hehe').hide();
+            }
             if ($(window).width() >= 992) {
                 return;
             }
@@ -82,11 +87,19 @@
         $(window).resize(function () {
             clearTimeout(handler);
             handler = setTimeout(function () {
+                if($(window).width() < 1200){
+                    $('#hehe').show();
+                } else {
+                    $('#hehe').hide();
+                }
                 $(iframe).height($(window).width() < 992 ? iframe.contentWindow.document.body.scrollHeight : '100%');
             }, 300);
         });
 
         var examples = tinyselect('#example-list', {
+            style: {
+                minHeight: '480px'
+            },
             mode: 'list',
             item: {
                 textField: 'title',
@@ -103,14 +116,15 @@
             },
             header: {
                 render: function (header) {
-                    this.prepend($('<div>')
-                        .append($('<h3>').append('示例列表'))
-                        .append('<div class="tips">Tips: 这个列表就是TinySelect的列表模式</div><br/>'));
+                this.prepend($('<div id="example-header">')
+                    .append($('<h3>').append('示例列表'))
+                    .append('<div class="tips">Tips: 这个列表就是TinySelect的列表模式</div><br/>')
+                    .append('<div id="hehe">你的浏览器宽度居然小于1200，你是原始人？</div>'));
                 },
                 filter: {
                     trigger: 'change',
                     delay: 382,
-                    placeholder: '请输入示例名称'
+                    placeholder: '在此过滤示例'
                 }
             },
             footer: {

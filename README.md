@@ -304,6 +304,7 @@ var option = {
         // 多选结果选项
         item:{            
             // 选中结果的渲染器，可以通过这个来改变选中结果的渲染
+            // 上下文指`this`向下拉组件
             render: false,
             // 结果项的样式
             style: null,
@@ -359,6 +360,7 @@ var option = {
 |ready|boolean|初级初始化是否完成，如果有初始化数据，此属性将会在数据渲染完成后才为`true`|
 |source|jQuery|创建实例的元素|
 |context|jQuery|当从`select`创建时，是新创建的占位元素，否则为创建实例的元素 |
+|result|jQuery|存放选中结果项的容器|
 |dom|jQuery|整个下拉框元素|
 |header|jQuery|下拉部分的头部|
 |box|jQuery|下拉项的列表容器|
