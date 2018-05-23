@@ -216,7 +216,9 @@ var option = {
         // 附加的样式类名称
         css: null,
         // 下拉项容器的样式
-        style: {}
+        style: {},
+        // 当layout为表格布局时，列的定义
+        columns: null
     },
     // 数据项分组设置
     group: {
@@ -350,6 +352,56 @@ var option = {
 - `table`的一行显示的是一项数据的多个字段
 
 不同的布局基本上都是通过不同的样式来实现的。
+
+### 表格布局选项
+
+当使用参数`option.box.layout: 'table'`时，下拉会通过表格的方式呈现。
+
+此时，需要通过选项`option.box.columns`来定义显示的列，如：
+
+```javascript
+var option = {
+    box:{
+        layout: 'table',
+        columns: [{
+            type: 'index',
+            width: 40,
+            align: 'center'
+        }, {
+            field: 'name',
+            width: 120,
+            style:{
+                color: 'red'
+            },
+            css: 'name-css',
+            render: function(val){
+                var info = this;
+                return val;
+            }
+        }, {
+            type: 'status',
+            width: 40
+        }]
+    }
+}
+```
+
+以上为表格布局时可用的列定义。其中，columns 是一个数组，每一项描述一列；每一列可用的属性如下：
+- type 内置的列类型，可选 `index`和`status`，分别对应 **索引列** 和 **选中状态** 列，普通列不传此参数
+- width 列的宽度，这个属性，要么所有列都设置，要么所有列都不设置（此时所有列平分宽度），当仅有部分列设置时，列宽度可能出现意外，强烈建议对每一列都指定宽度
+- style 这是一个对象，列的样式描述，用法与 jQuery 的 `.css` 方法一致
+- css 给列附加的样式类，多个类间使用空格分隔
+- align 列的对齐方式，可选值为 `center`、`left`、`right`
+- render 列渲染器，这是一个回调函数，它有一个参数`e`，其结构如下：
+    ```javascript
+    var e = {
+        rowIndex: '行索引',
+        columnIndex: '列索引',
+        data: '行的数据对象',
+        value: '列的值'
+    }
+    ```
+    其返回值会作为显示的内容。
 
 ## 属性
 

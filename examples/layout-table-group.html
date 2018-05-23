@@ -25,40 +25,33 @@
     $.getJSON('misc/data/groupdata.json').then(function (data) {
         tinyselect('#tinyselectcontext', {
             box: {
-                layout: 'table'
+                layout: 'table',
+                columns: [{
+                    type: 'index',
+                    width: 40
+                }, {
+                    field: 'id',
+                    width: 120,
+                    render: function(e){
+                        return '这是' + e.value + '月，哈哈哈哈哈哈哈哈中';
+                    }
+                }, {
+                    field: 'text',
+                    width: 200
+                }, {
+                    type: 'status',
+                    width: 40
+                }]
             },
             item: {
                 data: data,
-                visible: 5,
-                render: function (data, index) {
-                    // 这里创建一点随机数来填充表格，在项目中可以显示数据的其它字段
-                    // 设置宽度是为了让表格列能对齐
-                    $(this).find('.tinyselect-item-before').text(index)
-                        .css({
-                            textAlign: 'center',
-                            width: '40px'
-                        })
-                        .after('<div style="60px">' + getRandomNumber() + '</div>')
-                        .after('<div style="60px">' + getRandomNumber() + '</div>')
-                        .after('<div style="60px">' + getRandomNumber() + '</div>');
-
-                    $(this).find('.tinyselect-item-text')
-                        .css({
-                            width: '60px'
-                        });
-
-                    return data.text;
-                }
+                visible: 5
             },
             group:{
                 valueField: 'group'
             }
         });
     });
-
-    function getRandomNumber() {
-        return Math.round(Math.random() * 1000);
-    }
 </script>
 </body>
 

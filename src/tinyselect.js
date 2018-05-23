@@ -268,6 +268,12 @@
      */
     var css_resultLink = css_result + '-link';
 
+    /**
+     * 当显示为表格布局时，列的样式 tinyselect-item-table-col
+     * @type {string}
+     */
+    var css_tableColumn = css_item + '-table-col';
+
     //-------------------事件类型定义
 
     /**
@@ -387,6 +393,11 @@
     var filter_handle;
 
     /**
+     * 表格布局时，列定义是否已经处理过
+     */
+    var tableColumnsProcessed;
+
+    /**
      * 默认的创建下拉组件选项
      * 这里列出了所有可用的项
      * 这些项会被附加到 TinySelect上面,可以通过  TinySelect.defaults.xxx 来修改这些默认配置
@@ -453,7 +464,9 @@
             // 附加的样式类名称
             css: NULL,
             // 下拉项容器的样式
-            style: {}
+            style: {},
+            // 当layout为表格布局时，列的定义
+            columns: NULL
         },
         // 数据项分组设置
         group: {
@@ -622,7 +635,7 @@
      * 使用异步调用，这是通过  setTimeout 来假装的
      *
      * @param {Function} fn 要异步调用的函数
-     * @param {Array} args 函数参数的数组
+     * @param {array} args 函数参数的数组
      */
     var asyncCall = function (fn, args) {
         setTimeout(function () {
@@ -649,8 +662,8 @@
 
     /**
      * 合并数据，后面的数组会被合并到前面的数组中
-     * @param {Array} array 原始数组
-     * @param {Array} dataArray 这个数组里面的项会被追加到 array 的最后
+     * @param {array} array 原始数组
+     * @param {array} dataArray 这个数组里面的项会被追加到 array 的最后
      */
     var mergeArray = function (array, dataArray) {
         Array.prototype.push.apply(array, dataArray);
@@ -660,7 +673,7 @@
      * 根据上下文DOM元素初始化下拉框，如果已经初始化过了，那就返回对应的实例对象
      *
      * @param {jQuery|String|HTMLElement} selector 用来创建下拉组件的上下文DOM元素
-     * @param {Object|Array} [option] 选项或数据
+     * @param {Object|array} [option] 选项或数据
      * @param {Boolean} [multi] 是否可以多选，true为可多选，false为仅单选(默认);仅当option为数组时此参数有效
      * @return {TinySelect|undefined} 下拉实例
      */
@@ -706,7 +719,7 @@
          * 初始化函数，用来创建创建下拉实例
          *
          * @param {HTMLElement|jQuery} source 下拉的源DOM元素，下拉将在这个元素的上方或下方显示
-         * @param  {Object|Array} option 选项或数据
+         * @param  {Object|array} option 选项或数据
          * @param {Boolean} multi 是否可以多选，true为可多选，false为仅单选(默认);仅当option为数组时此参数有效
          * @return {TinySelect} 新的实例
          */
@@ -739,9 +752,14 @@
                 }
 
                 // 布局模式
-                var layout = ts.option.layout || layout_list;
+                var layout = ts.option.box.layout || layout_list;
                 if (support_layout.indexOf(layout) === -1) {
-                    throw new Error('Item layout "{0}" is not supported,\nhere is the valid modes: {0}'.fill(layout, support_layout.join()));
+                    throw new Error('Layout "{0}" is not supported,\nhere is the valid modes: {0}'.fill(layout, support_layout.join()));
+                }
+
+                // 如果是使用的表格布局，但是没有定义列 报个错
+                if (layout === layout_table && !ts.option.box.columns) {
+                    throw new Error('You specified table-layout, but you have not set option "box.columns"');
                 }
             }
             option = ts.option;
@@ -917,7 +935,7 @@
          *
          * @param {String|Function} keyOrFn 过滤的关键字或函数
          * @param {Boolean} [toggle=false] 是否隐藏未命中项，显示命中项
-         * @return {Array} 筛选命中的项组成的数组
+         * @return {array} 筛选命中的项组成的数组
          */
         filter: function (keyOrFn, toggle) {
             var ts = this;
@@ -1033,7 +1051,7 @@
         /**
          * 使用指定的数据重新渲染下拉项
          *
-         * @param {Array} data 数据项
+         * @param {array} data 数据项
          * @param {Function} callback 渲染完成后的回调函数
          * @return {TinySelect} 下拉组件实例
          */
@@ -1516,40 +1534,67 @@
         right.prepend(el);
     }
 
+
     /**
-     * 解析分组数据，根据指定的字段对数据进行分组
-     * @param {Array} data 原始数据
-     * @param {Object} group 分组的选项
-     * @return {Array} 处理后的数据
+     * 预处理数据，如果数据需要分组，解析出分组信息
+     * @param {array} data 原始数据
+     * @param {object} groupOption 分组的选项
+     * @return {array} 处理过的数据
      */
-    function resolveGroupData(data, group) {
-        var valueField = group.valueField;
+    function preprocessData(data, groupOption) {
+        // 看看是否需要分组
+        // valueField不为空时表示需要分组
+        var groupThem = groupOption.valueField;
+
+        var valueField = groupOption.valueField;
         // 没有设置 textField的话，就用 valueField 来作为 text
-        var textField = group.textField || valueField;
+        var textField = groupOption.textField || valueField;
 
         // 创建一个单独的数组用来作为未分组的项
-        var unknown = [{_group_item_: TRUE, text: group.unknown, id: 0}];
+        // 即：isGroup 为 true 表示是分组项
+        var unknown = [{isGroup: TRUE, text: groupOption.unknown, id: 0}];
 
         // 存放除了未分组的所有分组
         var groups = {};
-
         var groupid = 0;
 
-        $.each(data, function () {
-            var item = this;
-            var hasValue = own(item, valueField);
-            var hasText = own(item, textField);
-            if (!hasValue) {
-                item._group_id_ = 0;
-                unknown.push(item);
+        var items = [];
+
+        // 存放除了未分组的所有分组
+        // 遍历数据  找出分组来
+        $.each(data, function (i, item) {
+            var newitem = {
+                data: item,
+                index: i
+            };
+
+            // 不需要分组  就不用作更多处理了
+            if (!groupThem) {
+                items.push(newitem);
                 return;
             }
 
+            // 是否有分组的值字段
+            var hasValue = own(item, valueField);
+            // 是否有分组的文本字段
+            var hasText = own(item, textField);
+
+            // 数据没有分组值字段
+            // 放到未知分组中
+            if (!hasValue) {
+                item.group = 0;
+                unknown.push(newitem);
+                return;
+            }
+
+            // 有分组值字段
             var val = item[valueField];
 
             // 分组名称留空
             var text = hasText ? item[textField] : '';
 
+            // 这个分组还不存在
+            // 添加一个
             if (!own(groups, val)) {
                 groups[val] = {
                     id: ++groupid,
@@ -1558,10 +1603,14 @@
                 };
             }
 
-            item._group_id_ = groupid;
+            newitem.group = groupid;
 
-            groups[val].data.push(item);
+            groups[val].data.push(newitem);
         });
+
+        if (!groupThem) {
+            return items;
+        }
 
         // 重新弄成数组
         // 先取出所有的分组数据，将其搞成一条数组记录
@@ -1573,7 +1622,7 @@
         $.each(groups, function (key, groupData) {
             temp.push({
                 id: groupData.id,
-                _group_item_: TRUE,
+                isGroup: TRUE,
                 key: key,
                 text: groupData.text
             });
@@ -1661,11 +1710,9 @@
             return;
         }
 
-        // 处理分组
-        if (group.valueField) {
-            data = resolveGroupData(data, group);
-            length = data.length;
-        }
+        // 预处理数据
+        data = preprocessData(data, group);
+        length = data.length;
 
         // 先渲染指定的数量 若visibleCount为0表示全部显示
         // 如果 visibleCount 为0，函数  renderSpecifiedItems 会渲染所有数据的
@@ -1728,7 +1775,7 @@
      * @param {TinySelect} ts 当前的TinySelect实例
      * @param {jQuery} box 下拉项容器的jQuery对象
      * @param {Object} itemoption ts.option.item 的配置
-     * @param {Array} alldata 要渲染的所有数据，这些数据可能是经过分组处理的
+     * @param {array} alldata 要渲染的所有数据，这些数据可能是经过分组处理的
      * @param {Function} callback 所有项渲染完成后的回调函数
      * @param {Number} start 开始渲染的索引
      * @param {Number} [count] 渲染的数量
@@ -1774,14 +1821,14 @@
         // 数据是不是需要分组
         var groupThem = groupOption.valueField;
 
+        // 先找找看有没有现成的
         var body;
 
         // 来哇，循环数据项，并在下拉选项容器中添加DOM元素
         for (var i = start; i < end; i++) {
             var data = alldata[i];
-
-            // 是分组项
-            if (groupThem && data._group_item_) {
+            // 有_group_item_字段 是分组项
+            if (groupThem && data.isGroup) {
                 var group = createElement(css_group)
                     .addClass(groupOption.css)
                     .css(groupOption.style)
@@ -1798,41 +1845,47 @@
                 }
                 continue;
             }
-
-            if (!body) {
-                body = createElement(css_groupContent);
+            var selector = Selector.build(css_groupContent);
+            // 需要分组时，就查找对应 groupid 的项  否则查找默认项
+            body = box.find((groupThem ? selector.attr(str_groupAttr, data.group || '') : selector).done());
+            if (!body || !body.length) {
+                body = createElement(css_groupContent).attr(str_groupAttr, data.group);
                 box.append(body);
             }
+            var index = data.index;
+            data = data.data;
 
             // 创建一个下拉项的元素对象，并且使用 $().data() 把这一项的数据绑定到元素上
             var item = setData(createElement(css_item), data);
-
-            // 下拉项的元素分为3个部分
-            // 1 前缀元素 .tinyselect-item-before
-            // 2 文本元素 .tinyselect-item-text
-            // 3 后缀元素 .tinyselect-item-after
-
-            var before = createElement(css_itemBefore);
-            var text = createElement(css_itemText);
-            var after = createElement(css_itemAfter);
+            // 把新的下拉项追加到下拉项容器中
+            body.append(item);
 
             // 给下拉项设置样式，并把三部分追加上
-            item.addClass(itemoption.css).css(itemoption.style)
-                .append(before).append(text).append(after);
+            item.addClass(itemoption.css).css(itemoption.style);
+            if (asTable) {
+                renderAsTableRow(ts, data, item, index);
+            } else {
+                // 下拉项的元素分为3个部分
+                // 1 前缀元素 .tinyselect-item-before
+                // 2 文本元素 .tinyselect-item-text
+                // 3 后缀元素 .tinyselect-item-after
 
-            // 文本部分的渲染，如果有指定渲染器，那么就把渲染器的返回值作为文本的显示内容，
-            // 如果没有指定渲染器，那么就把指定的 option.item.textField 指定的属性值作为文本内容
-            text.append(itemoption.render ?
-                itemoption.render.call(item, data, i, originData) : data[itemoption.textField]);
+                var before = createElement(css_itemBefore);
+                var text = createElement(css_itemText);
+                var after = createElement(css_itemAfter);
+                item.append(before).append(text).append(after);
+                // 文本部分的渲染，如果有指定渲染器，那么就把渲染器的返回值作为文本的显示内容，
+                // 如果没有指定渲染器，那么就把指定的 option.item.textField 指定的属性值作为文本内容
+                text.append(itemoption.render ?
+                    itemoption.render.call(item, data, index, originData) : data[itemoption.textField]);
 
+            }
             // 给下拉项设置一个索引（添加属性 'data-tiny-index'）
             item.attr(str_indexAttr, i);
             if (groupThem) {
                 // 添加分组属性
-                item.attr(str_groupAttr, data._group_id_);
+                item.attr(str_groupAttr, data.group);
             }
-            // 把新的下拉项追加到下拉项容器中
-            body.append(item);
 
             // 只保存一个下拉项的DOM对象
             if (!keep) {
@@ -1853,6 +1906,76 @@
         callback.call(ts, originData);
 
         return keep;
+    }
+
+    function renderAsTableRow(ts, data, item, rowIndex) {
+        var columns = ts.option.box.columns;
+        if (!tableColumnsProcessed) {
+            preprocessTableColumns(columns);
+            tableColumnsProcessed = TRUE;
+        }
+        $.each(columns, function (i, col) {
+            var $col = createElement(css_tableColumn);
+            var val = data[col.field];
+            val = undefined === val || null === val ? '' : val;
+            
+            // 特殊列
+            switch (col.type) {
+                case 'index':
+                    // 索引列的值
+                    val = rowIndex;
+                    break;
+                case 'status':
+                    // 选中状态列
+                    $col.addClass(css_itemAfter);
+                    break;
+            }
+
+            if (col.style) {
+                $col.css(col.style);
+            }
+
+            if (col.css) {
+                $col.addClass(col.css);
+            }
+
+            if (col.align) {
+                $col.css('text-align', col.align);
+            }
+
+            if (col.width) {
+                $col.css('width', col.width);
+            }
+
+            if (col.render) {
+                val = col.render.call(ts, {
+                    rowIndex: rowIndex,
+                    columnIndex: i,
+                    data: data,
+                    value: val
+                });
+            }
+            $col.append(val);
+
+            item.append($col);
+        });
+    }
+
+    /**
+     * 预处理表格的列
+     * @param {array} columns 列定义
+     */
+    function preprocessTableColumns(columns) {
+        // 所有列都没有指定宽度
+        // 就平均分
+        if(columns.every(function(i, col){
+            return col.width;
+        })){
+            var avg = 100 / columns.length;
+            $.each(columns,function (i) {
+                columns[i].width = '{0}%'.fill(avg * 100);
+            });
+        }        
     }
 
     /**
@@ -2820,4 +2943,5 @@
      * 设置TinySelect到window对象上面
      */
     win.tinyselect = TinySelect;
-})(window, jQuery);
+})
+(window, jQuery);
