@@ -429,11 +429,11 @@ var option = {
 |:-|:-|:-|:-|
 |show(callback: Function)|显示下拉框|**callback** 下拉组件显示后的回调函数。这个回调函数没有参数，其上下文`this`对象指向下拉组件的弹出框DOM对象|TinySelect|
 |hide(callback: Function)|隐藏下拉框|**callback** 下拉组件隐藏后的回调函数。这个回调函数没有参数，其上下文`this`对象指向下拉组件的弹出框DOM对象|TinySelect|
-|value(value: Any, trigger: Boolean)|设置/获取下拉组件的选中值。<br/>注意:在初始化下拉组件后立即调用 `.value()` 设置值的时候，需要确保渲染已经完成，即选项中的`ready`回调已经被调用。|**value** 第一个参数是要设置的值，单选时传入单个值，多选时传入值数组。<br/>**trigger** 是否触发事件。`true`触发，`false`不触发。在设置值时，如果希望结果框中显示设置的值，这个参数需要传入`true`。默认为`false`。|TinySelect\|Any<br/>当传了参数时是设置值；不传参数时，是获取值，此时若是单选则返回选中的值，多选则返回选中的值的数组。|
-|filter(keyOrFn: String\|Function, toggle: Boolean)|根据关键字或函数过滤数据项。|**keyOrFn** 关键字或过滤器函数。当传入字符串的时候，会在下拉项中查找匹配的文本，若有匹配则返回这项的数据；传入函数时，通过函数的返回值决定是否命中（返回`true`表示命中），这个函数的上下文`this`对象是某一个下拉项的DOM对象，并且有一个参数`data`，`data`是这个数据项的数据。<br/>**toggle** 是否切换显示状态，即隐藏未命中项，显示命中项。默认为`false`。|Array<br/>返回所有命中项的数据组成的数组。|
+|value(value: Any, trigger: Boolean)|设置/获取下拉组件的选中值。<br/>注意:在初始化下拉组件后立即调用 `.value()` 设置值的时候，需要确保渲染已经完成，即选项中的`ready`回调已经被调用。|**value** 第一个参数是要设置的值，单选时传入单个值，多选时传入值数组。<br/>**trigger** 是否触发事件。`true`触发，`false`不触发。在设置值时，如果希望结果框中显示设置的值，这个参数需要传入`true`。默认为`false`。|TinySelect/Any<br/>当传了参数时是设置值；不传参数时，是获取值，此时若是单选则返回选中的值，多选则返回选中的值的数组。|
+|filter(keyOrFn: String/Function, toggle: Boolean)|根据关键字或函数过滤数据项。|**keyOrFn** 关键字或过滤器函数。当传入字符串的时候，会在下拉项中查找匹配的文本，若有匹配则返回这项的数据；传入函数时，通过函数的返回值决定是否命中（返回`true`表示命中），这个函数的上下文`this`对象是某一个下拉项的DOM对象，并且有一个参数`data`，`data`是这个数据项的数据。<br/>**toggle** 是否切换显示状态，即隐藏未命中项，显示命中项。默认为`false`。|Array<br/>返回所有命中项的数据组成的数组。|
 |clear()|清除下拉组件的选中项。||TinySelect|
 |load(data: Array)|加载数据，重新渲染下拉项。<br/>注意：调用这个函数前的所有数据项都会在重新渲染前被清空。|**data** 组件会根据这个数据重新渲染所有的下拉项|TinySelect|
-|readonly(readonly: Boolean)|设置/获取下拉组件的只读模式。当传了参数时是设置模式，不传参数时为获取模式。|**readonly** 为`true`时设置下拉组件只读，为`false`取消下拉组件的只读模式；不传时为获取当前是否是只读模式|Boolean\|TinySelect|
+|readonly(readonly: Boolean)|设置/获取下拉组件的只读模式。当传了参数时是设置模式，不传参数时为获取模式。|**readonly** 为`true`时设置下拉组件只读，为`false`取消下拉组件的只读模式；不传时为获取当前是否是只读模式|Boolean/TinySelect|
 |on(eventType: String, handler: Function)|绑定事件到下拉组件上。|**eventType** 事件类型名。目前支持`select`,`unselect`，传入其它值无效。<br/>**handler** 事件的处理函数。详见下方 [事件](#事件) 部分|TinySelect|
 |off(eventType: String, handler: Function)|从下拉组件上取消事件的绑定。<br/>注意：在调用`off`的时候，`handler`需要是函数引用，这个函数引用应该与调用`on`的时候是同一个引用，所以，调用`on`时使用了匿名函数，那么在这里无法解除绑定。|参数同上面的**on**函数|TinySelect|
 
