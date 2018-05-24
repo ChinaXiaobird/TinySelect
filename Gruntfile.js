@@ -57,7 +57,7 @@ module.exports = function(grunt) {
         less: {
             options: {
                 compress: true,
-                sourceMap: true
+                sourceMap: false
             },
             example: {
                 expand: true,
@@ -75,7 +75,7 @@ module.exports = function(grunt) {
         uglify: {
             options: {
                 banner: headerinfo,
-                sourceMap: true
+                sourceMap: false
             },
             dist: {
                 files: {

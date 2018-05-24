@@ -1565,7 +1565,8 @@
         $.each(data, function (i, item) {
             var newitem = {
                 data: item,
-                index: i
+                index: i,
+                group: ''
             };
 
             // 不需要分组  就不用作更多处理了
@@ -1847,7 +1848,7 @@
             }
             var selector = Selector.build(css_groupContent);
             // 需要分组时，就查找对应 groupid 的项  否则查找默认项
-            body = box.find((groupThem ? selector.attr(str_groupAttr, data.group || '') : selector).done());
+            body = box.find((groupThem ? selector.attr(str_groupAttr, data.group) : selector).done());
             if (!body || !body.length) {
                 body = createElement(css_groupContent).attr(str_groupAttr, data.group);
                 box.append(body);
