@@ -1,6 +1,6 @@
 {
     "name": "tinyselect",
-    "version": "0.4.2",
+    "version": "0.4.4",
     "description": "灵活的WEB下拉组件",
     "keywords": [
         "select",

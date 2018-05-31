@@ -148,13 +148,16 @@ var ts = tinyselect('#tinyselectcontext', {
     }
 });
 ```
-这里指定了自定义的样式类`custom-select-style`，这个类会被附加到下拉组件的顶层容器上，可以通过`.tinyselect-container.custom-select-style`这样的方式来重写样式。
+这里指定了自定义的样式类`custom-select-style`，这个类会被附加到下拉组件的顶层容器上，
+可以通过`.tinyselect-container.custom-select-style`这样的方式来重写样式。
 
 更多用法，请看[示例](https://hyjiacan.oschina.io/tinyselect/examples/)。
 
 ## 选项
 
-创建下拉组件的默认选项。这里列出了所有可用的项，这些项会被附加到`TinySelect`上面,可以通过修改`tinyselect.defaults` 来改变这些默认配置，如： `tinyselect.defaults.result.multi = true` 这样的写法会让页面内之后创建的下拉组件都默认启用多选模式。
+创建下拉组件的默认选项。这里列出了所有可用的项，这些项会被附加到`TinySelect`上面,
+可以通过修改`tinyselect.defaults` 来改变这些默认配置，如： `tinyselect.defaults.result.multi = true` 
+这样的写法会让页面内之后创建的下拉组件都默认启用多选模式。
 
 ```javascript
 var option = {
@@ -174,6 +177,32 @@ var option = {
         // 其值需要是可以转换成整数的类型，因为下拉的项会使用这个作为默认的行高
         // 例外的情况：设置了项的行高(即下面的 item.line-height)
         lineHeight: '28px'
+    },
+    // 获取远程数据的选项
+    ajax:{
+        // 获取远程数据的地址
+        // 设置了此参数即表示需要从远程加载数据
+        url: null,
+        // 请求的method
+        type: 'get',
+        // 请求的参数，可以是对象，字符串(q=v&q=v&q=v)或函数
+        // 是对象或字符串时，一般是固定参数
+        // 是函数时，用于动态设置参数，过滤框的输入会作为参数传入，返回值将作为请求的参数
+        param: null,
+        // 过滤数据时，传给后台的关键字参数名称
+        // 留空时表示过滤时不从远程重新查询数据
+        key: null,
+        // 关键字的编码器，当需要传输中文或特殊字符时，参数会被这个编码器编码后再进行传输
+        // 这是一个函数，其参数是过滤框内的输入
+        // 可以使用浏览器内置的 encodeURI或encodeURIComponent，
+        // 当然也可以使用自己写的或第三方诸如 Base64.encode 类的函数
+        encoder: NULL,
+        // 对请求的预处理函数，其参数为jQuery的ajax选项对象，返回false以阻止查询
+        req: null,
+        // 对返回数据的处理函数，其参数为: (data, status, xhr)，其返回值将作为组件的数据被加载
+        res: null,
+        // 是否在初始化时发送请求加载数据
+        auto: true
     },
     // 下拉框的头部
     header: {
@@ -196,6 +225,8 @@ var option = {
             placeholder: '输入后按回车过滤',
             // 过滤时是否区分大小写，默认为 false
             matchCase: false,
+            // 过滤框支持输入的最大长度
+            maxlength: 32,
             // 附加的样式类名称
             css: null,
             // 过滤框的样式

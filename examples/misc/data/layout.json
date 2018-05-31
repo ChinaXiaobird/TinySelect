@@ -35,6 +35,16 @@
     "group": "从select创建"
   },
   {
+    "title": "基础",
+    "file": "ajax-basic.html",
+    "group": "远程数据"
+  },
+  {
+    "title": "高级用法",
+    "file": "ajax-advance.html",
+    "group": "远程数据"
+  },
+  {
     "title": "下拉模式-单选",
     "file": "mode-dropdown-single.html",
     "group": "显示模式"

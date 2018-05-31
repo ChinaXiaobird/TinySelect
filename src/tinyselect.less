@@ -36,12 +36,17 @@
     height: auto;
     color: @con-color;
     z-index: 99;
+    outline: none;
     .border-box();
 
     &:not(.tinyselect-mode-list) {
         position: absolute;
         border-top-width: 0;
         box-shadow: @con-sd 0 2px 4px 2px;
+        
+        &:hover {
+            box-shadow: darken(@con-sd, 15%) 0 2px 4px 2px;
+        }
     }
 
     &.tinyselect-mode-list {
@@ -50,7 +55,7 @@
 
     &.tinyselect-mode-dropdown {
         display: none;
-        .content-box();
+        // .content-box();
     }
 
     .tinyselect-box {
@@ -191,6 +196,7 @@
         font-size: smaller;
         padding: 2px 5px;
         border-top: 1px solid @footer-bd;
+        color: @footer-color;
 
         &:after {
             content: ' ';
@@ -223,6 +229,7 @@
 
 .tinyselect-context {
     position: relative;
+    outline: none;
     .border-box();
 
     &-placeholder {

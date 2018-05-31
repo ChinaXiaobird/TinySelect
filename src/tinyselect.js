@@ -316,12 +316,12 @@
     /**
      * 每一项的序号索引属性名称
      */
-    var str_indexAttr = 'data-tiny-index';
+    var str_indexAttr = 'data-index';
 
     /**
      * 分组标记的属性名称
      */
-    var str_groupAttr = 'data-tiny-group';
+    var str_groupAttr = 'data-group';
 
     /**
      * 字符串模板的占位符，这个在渲染下拉项数量时使用
@@ -423,6 +423,32 @@
             // 例外的情况：设置了项的行高(即下面的 item.line-height)
             lineHeight: '28px'
         },
+        // 获取远程数据的选项
+        ajax: {
+            // 获取远程数据的地址
+            // 设置了此参数即表示需要从远程加载数据
+            url: NULL,
+            // 请求的method
+            type: 'get',
+            // 请求的参数，可以是对象，字符串(q=v&q=v&q=v)或函数
+            // 是对象或字符串时，一般是固定参数
+            // 是函数时，用于动态设置参数，过滤框的输入会作为参数传入，返回值将作为请求的参数
+            param: NULL,
+            // 过滤数据时，传给后台的关键字参数名称
+            // 留空时表示过滤时不从远程重新查询数据
+            key: NULL,
+            // 关键字的编码器，当需要传输中文或特殊字符时，参数会被这个编码器编码后再进行传输
+            // 这是一个函数，其参数是过滤框内的输入
+            // 可以使用浏览器内置的 encodeURI或encodeURIComponent，
+            // 当然也可以使用自己写的或第三方诸如 Base64.encode 类的函数
+            encoder: NULL,
+            // 对请求的预处理函数，其参数为jQuery的ajax选项对象，返回false以阻止查询
+            req: NULL,
+            // 对返回数据的处理函数，其参数为: (data, status, xhr)，其返回值将作为组件的数据被加载
+            res: NULL,
+            // 是否在初始化时发送请求加载数据
+            auto: TRUE
+        },
         // 下拉框的头部
         header: {
             // 头部渲染器，其this上下文就是其DOM对象，
@@ -444,6 +470,8 @@
                 placeholder: '输入后按回车过滤',
                 // 过滤时是否区分大小写，默认为 false
                 matchCase: FALSE,
+                // 过滤框支持输入的最大长度
+                maxlength: 32,
                 // 附加的样式类名称
                 css: NULL,
                 // 过滤框的样式
@@ -788,14 +816,17 @@
             // 绑定事件
             bindEvent(ts);
 
-            // 渲染项
-            ts.load(option.item.data, function () {
-                ts.ready = TRUE;
-                // 这里搞了个回调，以在所有项渲染完成后调用的ready回调
-                if (option.ready) {
-                    option.ready.call(ts);
-                }
-            });
+            // 自动加载异步数据
+            if (!option.ajax.url || option.ajax.auto) {
+                // 渲染项
+                ts.load(option.item.data, function () {
+                    ts.ready = TRUE;
+                    // 这里搞了个回调，以在所有项渲染完成后调用的ready回调
+                    if (option.ready) {
+                        option.ready.call(ts);
+                    }
+                });
+            }
 
             // 返回实例对象
             return ts;
@@ -1051,28 +1082,25 @@
         /**
          * 使用指定的数据重新渲染下拉项
          *
-         * @param {array} data 数据项
-         * @param {Function} callback 渲染完成后的回调函数
+         * @param {array|Function} [data] 数据项，当加载远程数据时，可以传入函数，此时函数为成功的回调
+         * @param {Function} [callback] 渲染完成后的回调函数
          * @return {TinySelect} 下拉组件实例
          */
         load: function (data, callback) {
             var ts = this;
-            var itemOption = ts.option.item;
-            // 将新的数据绑定到组件上
-            // 为了保持数据的纯洁性，用clone创建数据的副本来玩
-            itemOption.data = clone(data);
 
-            // 渲染下拉项
-            renderItems(ts, function () {
-                // 根据配置设置默认的选中项
-                if (itemOption.value) {
-                    ts.value(itemOption.value);
+            if (ts.option.ajax.url) {
+                // 当加载远程数据时，此时data可以是成功的回调函数(可能为空)
+                if ($.isFunction(data)) {
+                    callback = data;
                 }
-                fixSize(ts);
-                if (callback) {
-                    callback.call(ts, ts.option.item.data);
-                }
-            });
+                loadRemoteData(ts, function (remoteData) {
+                    renderData(ts, remoteData, callback);
+                });
+                return ts;
+            }
+
+            renderData(ts, data, callback);
 
             return ts;
         },
@@ -1394,8 +1422,8 @@
         // 创建过滤
         var filteroption = option.header.filter;
 
-        var filter = $('<input type="text"  placeholder="{0}" class="{0}" />'
-            .fill(filteroption.placeholder, css_filter))
+        var filter = $('<input type="text"  placeholder="{0}" class="{0}" maxlength="{0}" />'
+            .fill(filteroption.placeholder, css_filter, filteroption.maxlength))
             .addClass(filteroption.css)
             .css(filteroption.style);
 
@@ -1419,7 +1447,14 @@
 
             // 设置过滤的定时器
             filter_handle = setTimeout(function () {
-                ts.filter(val, TRUE);
+                // 如果是本地 就调用filter接口
+                // 如果是远程，并且指定了查询参数名称，就调用load接口
+                // 否则还是使用本地过滤接口
+                if (option.ajax.url && option.ajax.key) {
+                    ts.load();
+                } else {
+                    ts.filter(val, TRUE);
+                }
             }, filteroption.delay);
         });
 
@@ -1467,6 +1502,8 @@
         if (footeroption.render) {
             footeroption.render.call(footer, option.data);
         }
+
+        // TODO 如果是ajax支持，那么在没有输入关键字时就不用显示footer部分
 
         return footer;
     }
@@ -1534,6 +1571,91 @@
         right.prepend(el);
     }
 
+    /**
+     * 加载远程数据
+     * @param {TinySelect} ts 组件实例
+     * @param {Function} [callback] 数据加载完成后的回调
+     */
+    function loadRemoteData(ts, callback) {
+        var option = ts.option.ajax;
+        var searchkey = option.key;
+        var param = option.param || {};
+
+        var val = ts.header.find('.' + css_filter).val();
+        // 判断关键字是否需要编码后传输
+        // 咋判断哟？ 那就是看看是否指定了编码器 encoder
+        if (option.encoder) {
+            val = option.encoder(val);
+        }
+        switch (typeof param) {
+            case 'string':
+                if (searchkey) {
+                    param += '&{0}={0}'.fill(searchkey, val);
+                }
+                break;
+            case 'function':
+                param = param(val);
+                break;
+            case 'object':
+                if (searchkey) {
+                    param[searchkey] = val;
+                }
+                break;
+            default:
+                // 数据格式不支持
+                console.error('Invalid ajax data format');
+                return;
+        }
+
+        var ajaxOption = {
+            url: option.url,
+            type: option.type,
+            data: param
+        };
+
+        if (option.req) {
+            // 使用返回值作为新的选项
+            ajaxOption = option.req(ajaxOption);
+            if (FALSE === ajaxOption) {
+                // 执行被中止
+                return;
+            }
+        }
+
+        // 参数  data, status, xhr
+        $.ajax(ajaxOption).done(function (data, status, xhr) {
+            if (option.res) {
+                data = option.res(data, status, xhr);
+            }
+            callback(data);
+        });
+    }
+
+    /**
+     * 数据加载后开始渲染数据
+     * @param {TinySelect} ts 组件实例
+     * @param {array} data 数据
+     * @param {Function} callback 渲染数据完成后的回调函数
+     */
+    function renderData(ts, data, callback) {
+        var itemOption = ts.option.item;
+
+        // 将新的数据绑定到组件上
+        // 为了保持数据的纯洁性，用clone创建数据的副本来玩
+        itemOption.data = clone(data);
+
+        // 渲染下拉项
+        renderItems(ts, function () {
+            // 根据配置设置默认的选中项
+            if (itemOption.value) {
+                ts.value(itemOption.value);
+            }
+            fixSize(ts);
+            if (callback) {
+                callback.call(ts, itemOption.data);
+            }
+        });
+    }
 
     /**
      * 预处理数据，如果数据需要分组，解析出分组信息
@@ -1881,7 +2003,7 @@
                     itemoption.render.call(item, data, index, originData) : data[itemoption.textField]);
 
             }
-            // 给下拉项设置一个索引（添加属性 'data-tiny-index'）
+            // 给下拉项设置一个索引（添加属性 'data-index'）
             item.attr(str_indexAttr, i);
             if (groupThem) {
                 // 添加分组属性
@@ -1919,7 +2041,7 @@
             var $col = createElement(css_tableColumn);
             var val = data[col.field];
             val = undefined === val || null === val ? '' : val;
-            
+
             // 特殊列
             switch (col.type) {
                 case 'index':
@@ -1969,14 +2091,14 @@
     function preprocessTableColumns(columns) {
         // 所有列都没有指定宽度
         // 就平均分
-        if(columns.every(function(i, col){
+        if (columns.every(function (i, col) {
             return col.width;
-        })){
+        })) {
             var avg = 100 / columns.length;
-            $.each(columns,function (i) {
+            $.each(columns, function (i) {
                 columns[i].width = '{0}%'.fill(avg * 100);
             });
-        }        
+        }
     }
 
     /**
@@ -2068,7 +2190,7 @@
                 pos.top = pos.top - domheight - 2;
             } else {
                 // 放在下方
-                pos.top = pos.top + contextHeight + 2;
+                pos.top = pos.top + contextHeight;
             }
 
             // 设置下拉组件的显示位置
@@ -2195,6 +2317,11 @@
         $(win).keydown(function (e) {
             // 如果下拉组件是隐藏的，就不处理这个
             if (!ts.dom.is(selector_visible)) {
+                return;
+            }
+
+            // 如果焦点在过滤框，也不处理这个
+            if ($(e.target).hasClass(css_filter)) {
                 return;
             }
 
@@ -2334,13 +2461,13 @@
 
         // 创建元素
         var item = createElement(css_result)
-        // 设置项的索引属性 data-tiny-index
+        // 设置项的索引属性 data-index
             .attr(str_indexAttr, index)
             // 设置显示的文本
             .append(createElement(css_resultText, tag_span).html(text))
             // 设置结果上用来取消某项选中的元素，鼠标点一下就取消选中对应的
-            // 取消选中的依据是元素的 data-tiny-index 属性
-            // .tinyselect-item-selected[data-tiny-index]:first
+            // 取消选中的依据是元素的 data-index 属性
+            // .tinyselect-item-selected[data-index]:first
             .append(createElement(css_resultLink, tag_span).click(function () {
                 // 如果是只读的，就不能操作
                 if (option.readonly) {
@@ -2730,8 +2857,8 @@
         var count = getSelectedCount(ts);
 
         // 点击项后，如果需要取消选中这一项，那么就把已经选中的结果从结果容器中移除
-        // 移除的依据是元素的 data-tiny-index 属性
-        // .tinyselect-result-item[data-tiny-index=n]:first
+        // 移除的依据是元素的 data-index 属性
+        // .tinyselect-result-item[data-index=n]:first
         ts.result.find(Selector.build(css_result).attr(str_indexAttr, index).first())
             .remove();
 

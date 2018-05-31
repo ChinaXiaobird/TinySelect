@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0"/>
+    <script src="../lib/jquery-1.10.2.min.js"></script>
+    <script src="../src/tinyselect.js"></script>
+    <link rel="stylesheet" type="text/css" href="../dist/tinyselect.min.css"/>
+    <link rel="stylesheet" type="text/css" href="misc/css/example.css"/>
+    <link rel="stylesheet" type="text/css" href="../lib/codemirror/codemirror.css"/>
+    <script src="../lib/codemirror/codemirror.js"></script>
+    <script src="../lib/codemirror/mode/javascript/javascript.js"></script>
+    <script src="../lib/codemirror/mode/xml/xml.js"></script>
+    <script src="../lib/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+    <script src="../lib/codemirror/mode/css/css.js"></script>
+</head>
+
+<body>
+<div class="tinyselectcontext-container">
+    <div id="tinyselectcontext"></div>
+</div>
+<blockquote>此示例仅用于展示请求的参数，并不会在后台对参数进行处理，还请自行打开调试面板查看</blockquote>
+<script src="misc/js/source.js"></script>
+<script>
+    // 用来演示的编码器：反转输入的关键字
+    function keyEncoder(val) {
+        return val.split('').reverse().join('');
+    }
+
+    tinyselect('#tinyselectcontext', {
+        ajax: {
+            url: 'misc/data/data.json',
+            param: {
+                p1: 1,
+                p2: 2
+            },
+            key: 'queryKey',
+            req: function (option) {
+                option.data.hehehe = 'hahaha';
+                return option;
+            },
+            encoder: keyEncoder,
+            res: function (data) {
+                data.push({id: '13', text: '十三月'});
+                return data;
+            }
+        }
+    });
+</script>
+</body>
+
+</html>
