@@ -1,4 +1,4 @@
-# TinySelect
+# TinySelect :disappointed: :disappointed: 不好意思，此项目已停止维护 :disappointed: :disappointed:
 
 TinySelect 是一个以灵活为目标的WEB下拉组件。旨在通过灵活的接口和用法，适应各种不同的场景
 
